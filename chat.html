@@ -302,7 +302,7 @@
   document.documentElement.style.visibility='hidden';
   var t=localStorage.getItem('rhf_token');
   if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
-  fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+  fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
     .then(function(r){
       if(r.ok){document.documentElement.style.visibility='';}
       else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
@@ -539,7 +539,7 @@
     }
 
     try {
-      const res = await fetch('/api/whatsapp/chats');
+      const res = await fetch('/api/whatsapp?action=chats');
       const data = await res.json();
 
       if (!data.data || data.data.length === 0) {
@@ -650,7 +650,7 @@
     }
 
     try {
-      const res = await fetch(`/api/whatsapp/chat-messages?phone=${encodeURIComponent(phone)}&limit=50`);
+      const res = await fetch(`/api/whatsapp?action=messages?phone=${encodeURIComponent(phone)}&limit=50`);
       const data = await res.json();
 
       if (!data.data || data.data.length === 0) {
@@ -728,7 +728,7 @@
     scrollToBottom();
 
     try {
-      const res = await fetch('/api/whatsapp/send', {
+      const res = await fetch('/api/whatsapp?action=send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: activePhone, text }),

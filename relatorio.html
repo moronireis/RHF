@@ -365,7 +365,7 @@
   document.documentElement.style.visibility='hidden';
   var t=localStorage.getItem('rhf_token');
   if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
-  fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+  fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
     .then(function(r){
       if(r.ok){document.documentElement.style.visibility='';}
       else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
@@ -499,12 +499,12 @@
                 <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/webhook/evolution</td><td class="primary">Evolution API webhook</td><td><span class="badge green">Ativo</span></td></tr>
                 <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/contacts</td><td class="primary">Lista candidatos</td><td><span class="badge green">Ativo</span></td></tr>
                 <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/messages</td><td class="primary">Mensagens (ler/enviar)</td><td><span class="badge green">Ativo</span></td></tr>
-                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/whatsapp/chats</td><td class="primary">Lista conversas agrupadas</td><td><span class="badge green">Ativo</span></td></tr>
-                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/whatsapp/chat-messages</td><td class="primary">Mensagens por telefone</td><td><span class="badge green">Ativo</span></td></tr>
-                <tr><td><span class="badge green">POST</span></td><td class="mono">/api/whatsapp/send</td><td class="primary">Envio via WhatsApp</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/whatsapp?action=chats</td><td class="primary">Lista conversas agrupadas</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/whatsapp?action=messages</td><td class="primary">Mensagens por telefone</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">POST</span></td><td class="mono">/api/whatsapp?action=send</td><td class="primary">Envio via WhatsApp</td><td><span class="badge green">Ativo</span></td></tr>
                 <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/pandape/matches</td><td class="primary">Busca match Pandapé</td><td><span class="badge green">Ativo</span></td></tr>
-                <tr><td><span class="badge green">POST</span></td><td class="mono">/api/cv/generate</td><td class="primary">Gera CV com Claude</td><td><span class="badge green">Ativo</span></td></tr>
-                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/cv/query</td><td class="primary">Consulta CVs gerados</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">POST</span></td><td class="mono">/api/cv?action=generate</td><td class="primary">Gera CV com Claude</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/cv?action=query</td><td class="primary">Consulta CVs gerados</td><td><span class="badge green">Ativo</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1026,11 +1026,11 @@ Authorization: Bearer {access_token}
 <span class="flow-handler">api/messages.js</span>         GET /api/messages?phone=N
   └──▶ <span class="flow-table">rhf_messages</span>         ← SELECT (filtro por phone)
 
-<span class="flow-handler">api/whatsapp/chats.js</span>   GET /api/whatsapp/chats
+<span class="flow-handler">api/whatsapp/chats.js</span>   GET /api/whatsapp?action=chats
   ├──▶ <span class="flow-table">rhf_messages</span>         ← SELECT 2000 msgs (group by phone)
   └──▶ <span class="flow-table">candidates</span>            ← SELECT (name lookup)
 
-<span class="flow-handler">api/cv/query.js</span>         GET /api/cv/query
+<span class="flow-handler">api/cv/query.js</span>         GET /api/cv?action=query
   └──▶ <span class="flow-table">generated_cvs</span>        ← SELECT
 
 
@@ -1182,7 +1182,7 @@ async function loadOverview() {
   }
 
   // Load chats
-  const chatsData = await safeFetch('/api/whatsapp/chats');
+  const chatsData = await safeFetch('/api/whatsapp?action=chats');
   if (chatsData && chatsData.data) {
     allChats = chatsData.data;
     document.getElementById('stat-chats').textContent = allChats.length;
@@ -1191,7 +1191,7 @@ async function loadOverview() {
   }
 
   // Load CVs
-  const cvsData = await safeFetch('/api/cv/query');
+  const cvsData = await safeFetch('/api/cv?action=query');
   if (cvsData && cvsData.data) {
     document.getElementById('stat-cvs').textContent = cvsData.data.length;
   } else {
@@ -1238,7 +1238,7 @@ function renderSourceBreakdown() {
 // META WHATSAPP
 // ============================================================
 async function loadMeta() {
-  const chatsData = await safeFetch('/api/whatsapp/chats');
+  const chatsData = await safeFetch('/api/whatsapp?action=chats');
   if (!chatsData || !chatsData.data) {
     document.getElementById('chats-section').innerHTML = '<div class="empty">Erro ao carregar conversas</div>';
     return;

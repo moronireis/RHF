@@ -495,7 +495,7 @@
   document.documentElement.style.visibility='hidden';
   var t=localStorage.getItem('rhf_token');
   if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
-  fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+  fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
     .then(function(r){
       if(r.ok){document.documentElement.style.visibility='';}
       else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
@@ -1832,8 +1832,8 @@
       // Fetch in parallel
       const [contactsRes, cvsRes, chatsRes] = await Promise.allSettled([
         fetch('/api/contacts?limit=500').then(r => r.json()),
-        fetch('/api/cv/query?limit=500').then(r => r.json()),
-        fetch('/api/whatsapp/chats').then(r => r.json()),
+        fetch('/api/cv?action=query?limit=500').then(r => r.json()),
+        fetch('/api/whatsapp?action=chats').then(r => r.json()),
       ]);
 
       // Candidates count
@@ -2039,7 +2039,7 @@
       if (queueEl) queueEl.textContent = candidates.length;
 
       // Update CVs sent count from CV query
-      fetch('/api/cv/query?limit=500').then(r => r.json()).then(cvsJson => {
+      fetch('/api/cv?action=query?limit=500').then(r => r.json()).then(cvsJson => {
         if (cvsJson.status === 'ok') {
           const cvsSentEl = document.getElementById('curriculo-queue-sent');
           if (cvsSentEl) cvsSentEl.textContent = cvsJson.count || 0;
@@ -2171,7 +2171,7 @@
     loading.classList.add('show');
 
     try {
-      const res = await fetch('/api/cv/generate', {
+      const res = await fetch('/api/cv?action=generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidate_id: selectedCandidateId }),

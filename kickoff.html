@@ -193,7 +193,7 @@
   document.documentElement.style.visibility='hidden';
   var t=localStorage.getItem('rhf_token');
   if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
-  fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+  fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
     .then(function(r){
       if(r.ok){document.documentElement.style.visibility='';}
       else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
