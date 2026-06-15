@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Integrações — RHF Talentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --bg-card-hover: #1c2128;
+    --bg-row-alt: #0f1419;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #e6edf3;
+    --text-sec: #8b949e;
+    --text-muted: #484f58;
+    --orange: #f97316;
+    --orange-dim: rgba(249,115,22,0.15);
+    --green: #3fb950;
+    --green-dim: rgba(63,185,80,0.15);
+    --blue: #58a6ff;
+    --blue-dim: rgba(88,166,255,0.15);
+    --amber: #d29922;
+    --amber-dim: rgba(210,153,34,0.15);
+    --red: #f85149;
+    --red-dim: rgba(248,81,73,0.15);
+    --purple: #bc8cff;
+    --purple-dim: rgba(188,140,255,0.15);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  /* ===== LAYOUT ===== */
+  .page-wrapper { max-width: 1400px; margin: 0 auto; padding: 0 32px 80px; }
+
+  /* ===== HEADER ===== */
+  .report-header {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .brand-logo {
+    width: 38px; height: 38px;
+    background: var(--orange);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .brand-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .brand-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .header-title { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; }
+  .header-subtitle { font-size: 14px; color: var(--text-sec); margin-top: 6px; }
+
+  .header-meta { text-align: right; flex-shrink: 0; }
+  .last-updated { font-size: 12px; color: var(--text-sec); margin-bottom: 10px; }
+  .last-updated span { color: var(--text); font-weight: 600; }
+  .header-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--bg-card);
+    color: var(--text); transition: background 0.15s, border-color 0.15s;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,0.2); }
+  .btn.primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .btn.primary:hover { background: #ea6c10; }
+
+  /* ===== NAV ===== */
+  .nav-tabs {
+    display: flex; gap: 4px; margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; padding-bottom: 0;
+  }
+  .nav-tab {
+    padding: 10px 18px; font-size: 13px; font-weight: 600;
+    color: var(--text-sec); cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    white-space: nowrap; transition: color 0.15s, border-color 0.15s;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ===== SECTION HEADINGS ===== */
+  .section { margin-bottom: 32px; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .section-title {
+    font-size: 17px; font-weight: 700; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-subtitle { font-size: 13px; color: var(--text-sec); margin-top: 3px; }
+  .section-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  /* ===== OVERVIEW CARDS ===== */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .stat-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 20px;
+    transition: border-color 0.15s;
+  }
+  .stat-card:hover { border-color: var(--border-strong); }
+  .stat-label { font-size: 12px; font-weight: 600; color: var(--text-sec); letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 10px; }
+  .stat-value { font-size: 36px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .stat-value.orange { color: var(--orange); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.blue { color: var(--blue); }
+  .stat-value.purple { color: var(--purple); }
+  .stat-note { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+  /* ===== STATUS INTEGRATIONS ===== */
+  .integrations-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .integration-badge {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg-card);
+    font-size: 13px; font-weight: 600;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .status-dot.green { background: var(--green); box-shadow: 0 0 6px rgba(63,185,80,0.6); }
+  .status-dot.amber { background: var(--amber); box-shadow: 0 0 6px rgba(210,153,34,0.6); }
+  .status-dot.red { background: var(--red); }
+
+  /* ===== CARD / PANEL ===== */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-subtitle { font-size: 12px; color: var(--text-muted); }
+  .card-body { padding: 20px; }
+  .card-body.no-pad { padding: 0; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  /* ===== TABLE ===== */
+  .table-wrap { overflow-x: auto; }
+  table.data-table { width: 100%; border-collapse: collapse; }
+  table.data-table th {
+    text-align: left; padding: 11px 14px;
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  table.data-table th:hover { color: var(--text-sec); }
+  table.data-table th.sorted { color: var(--orange); }
+  table.data-table td {
+    padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px; color: var(--text-sec); vertical-align: middle;
+    max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  table.data-table td.primary { color: var(--text); font-weight: 500; }
+  table.data-table td.mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+
+  /* ===== BADGES ===== */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .badge.green { background: var(--green-dim); color: var(--green); }
+  .badge.orange { background: var(--orange-dim); color: var(--orange); }
+  .badge.blue { background: var(--blue-dim); color: var(--blue); }
+  .badge.amber { background: var(--amber-dim); color: var(--amber); }
+  .badge.red { background: var(--red-dim); color: var(--red); }
+  .badge.purple { background: var(--purple-dim); color: var(--purple); }
+  .badge.gray { background: rgba(255,255,255,0.07); color: var(--text-sec); }
+
+  /* ===== BAR CHART ===== */
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar-label { font-size: 12px; color: var(--text-sec); width: 80px; flex-shrink: 0; text-align: right; }
+  .bar-label.wide { width: 120px; }
+  .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+  .bar-fill.orange { background: var(--orange); }
+  .bar-fill.blue { background: var(--blue); }
+  .bar-fill.green { background: var(--green); }
+  .bar-fill.purple { background: var(--purple); }
+  .bar-fill.amber { background: var(--amber); }
+  .bar-count { font-size: 12px; font-weight: 700; color: var(--text); width: 40px; flex-shrink: 0; }
+
+  /* ===== BREAKDOWN PILLS ===== */
+  .breakdown-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .breakdown-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    min-width: 110px;
+  }
+  .breakdown-label { font-size: 12px; color: var(--text-sec); }
+  .breakdown-value { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .breakdown-value.orange { color: var(--orange); }
+  .breakdown-value.blue { color: var(--blue); }
+  .breakdown-value.green { color: var(--green); }
+  .breakdown-value.amber { color: var(--amber); }
+  .breakdown-value.purple { color: var(--purple); }
+
+  /* ===== CODE BLOCK ===== */
+  .code-block {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 12.5px; line-height: 1.7;
+    overflow-x: auto; white-space: pre;
+    color: var(--text-sec);
+  }
+  .code-block .kw { color: var(--purple); }
+  .code-block .str { color: var(--green); }
+  .code-block .num { color: var(--orange); }
+  .code-block .comment { color: var(--text-muted); }
+  .code-block .key { color: var(--blue); }
+
+  /* ===== DATA FLOW DIAGRAM ===== */
+  .flow-diagram {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 28px 32px;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.9;
+    overflow-x: auto; white-space: pre;
+  }
+  .flow-source { color: var(--orange); font-weight: 700; }
+  .flow-dest { color: var(--blue); font-weight: 700; }
+  .flow-table { color: var(--green); font-weight: 700; }
+  .flow-arrow { color: var(--text-muted); }
+  .flow-handler { color: var(--purple); }
+  .flow-comment { color: var(--text-muted); font-style: italic; }
+
+  /* ===== WEBHOOK SCHEMA ===== */
+  .schema-field {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .schema-field:last-child { border-bottom: none; }
+  .schema-name { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12.5px; font-weight: 600; color: var(--blue); width: 180px; flex-shrink: 0; padding-top: 1px; }
+  .schema-type { font-size: 11px; font-weight: 700; color: var(--text-muted); width: 70px; flex-shrink: 0; padding-top: 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .schema-desc { font-size: 13px; color: var(--text-sec); flex: 1; }
+  .schema-example { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11.5px; color: var(--green); margin-top: 3px; }
+
+  /* ===== LOADING ===== */
+  .loading {
+    display: flex; align-items: center; gap: 10px;
+    padding: 32px; color: var(--text-muted); font-size: 13px;
+    justify-content: center;
+  }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: var(--orange); border-radius: 50%;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+  /* ===== INFO ALERT ===== */
+  .alert {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 18px; border-radius: var(--radius-sm);
+    border: 1px solid; font-size: 13px; line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .alert.amber { background: var(--amber-dim); border-color: rgba(210,153,34,0.3); color: #e6c46e; }
+  .alert.green { background: var(--green-dim); border-color: rgba(63,185,80,0.3); color: #7ee38b; }
+  .alert.blue { background: var(--blue-dim); border-color: rgba(88,166,255,0.3); color: #93c5fd; }
+  .alert-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+
+  /* ===== ENDPOINT ROW ===== */
+  .endpoint-row {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .endpoint-row:last-child { border-bottom: none; }
+  .endpoint-method {
+    font-family: 'SF Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 4px; flex-shrink: 0; margin-top: 1px;
+  }
+  .endpoint-method.get { background: var(--blue-dim); color: var(--blue); }
+  .endpoint-method.post { background: var(--green-dim); color: var(--green); }
+  .endpoint-path { font-family: 'SF Mono', monospace; font-size: 12.5px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+  .endpoint-desc { font-size: 13px; color: var(--text-sec); }
+
+  /* ===== REFRESH BAR ===== */
+  .refresh-bar {
+    position: fixed; bottom: 24px; right: 32px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 18px;
+    font-size: 12px; color: var(--text-sec); z-index: 100;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .refresh-countdown { font-weight: 700; color: var(--orange); }
+
+  /* ===== PRINT ===== */
+  @media print {
+    .nav-tabs, .refresh-bar, .header-actions { display: none !important; }
+    .tab-pane { display: block !important; }
+    .page-wrapper { padding: 16px; }
+    body { background: #fff; color: #000; }
+    .card, .stat-card { border-color: #ddd; background: #fff; }
+    .section-title, .stat-value, .card-title { color: #000; }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .page-wrapper { padding: 0 16px 60px; }
+    .report-header { flex-direction: column; }
+    .header-meta { text-align: left; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .schema-name { width: 130px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH GUARD — must be first in body -->
+<script>
+(function(){
+  document.documentElement.style.visibility='hidden';
+  var t=localStorage.getItem('rhf_token');
+  if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
+  fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+    .then(function(r){
+      if(r.ok){document.documentElement.style.visibility='';}
+      else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
+    })
+    .catch(function(){localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');});
+})();
+</script>
+
+<div class="page-wrapper">
+
+  <!-- ===== HEADER ===== -->
+  <div class="report-header">
+    <div>
+      <div class="header-brand">
+        <div class="brand-logo">R</div>
+        <div>
+          <div class="brand-name">RHF Talentos</div>
+          <div class="brand-sub">powered by u4digital</div>
+        </div>
+      </div>
+      <h1 class="header-title">Relatório de Integrações</h1>
+      <p class="header-subtitle">Dados em tempo real das APIs Meta WhatsApp e Pandapé</p>
+    </div>
+    <div class="header-meta">
+      <div class="last-updated">Atualizado em: <span id="last-updated-time">—</span></div>
+      <div class="last-updated">Próxima atualização em: <span id="next-refresh-countdown" class="refresh-countdown">60s</span></div>
+      <div class="header-actions" style="margin-top:12px;">
+        <button class="btn" onclick="refreshAll()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Atualizar
+        </button>
+        <button class="btn" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NAV TABS ===== -->
+  <div class="nav-tabs" role="tablist">
+    <button class="nav-tab active" onclick="showTab('tab-overview', this)">Visão Geral</button>
+    <button class="nav-tab" onclick="showTab('tab-meta', this)">Meta WhatsApp</button>
+    <button class="nav-tab" onclick="showTab('tab-chatguru', this)">ChatGuru</button>
+    <button class="nav-tab" onclick="showTab('tab-pandape', this)">Pandapé</button>
+    <button class="nav-tab" onclick="showTab('tab-candidatos', this)">Candidatos</button>
+    <button class="nav-tab" onclick="showTab('tab-fluxo', this)">Fluxo de Dados</button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 1: VISÃO GERAL                                          -->
+  <!-- ============================================================ -->
+  <div id="tab-overview" class="tab-pane active">
+
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Resumo Geral</div>
+          <div class="section-subtitle">Totais consolidados de todas as integrações</div>
+        </div>
+      </div>
+      <div class="stat-grid" id="overview-stats">
+        <div class="stat-card"><div class="stat-label">Candidatos</div><div class="stat-value orange" id="stat-candidates">—</div><div class="stat-note">Tabela candidates</div></div>
+        <div class="stat-card"><div class="stat-label">Conversas</div><div class="stat-value blue" id="stat-chats">—</div><div class="stat-note">Agrupado por telefone</div></div>
+        <div class="stat-card"><div class="stat-label">Mensagens</div><div class="stat-value green" id="stat-messages">—</div><div class="stat-note">Tabela rhf_messages</div></div>
+        <div class="stat-card"><div class="stat-label">CVs Gerados</div><div class="stat-value purple" id="stat-cvs">—</div><div class="stat-note">Tabela generated_cvs</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Status das Integrações</div>
+      </div>
+      <div class="integrations-row">
+        <div class="integration-badge">
+          <div class="status-dot green"></div>
+          Meta Cloud API
+        </div>
+        <div class="integration-badge">
+          <div class="status-dot green"></div>
+          ChatGuru Webhook
+        </div>
+        <div class="integration-badge" id="pandape-status-badge">
+          <div class="status-dot amber"></div>
+          Pandapé (aguardando credenciais)
+        </div>
+        <div class="integration-badge">
+          <div class="status-dot green"></div>
+          Supabase
+        </div>
+        <div class="integration-badge">
+          <div class="status-dot green"></div>
+          Claude API (CV)
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Distribuição por Fonte</div>
+        <div class="section-subtitle">Origem dos candidatos cadastrados</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div id="source-breakdown" class="loading">
+            <div class="spinner"></div> Carregando dados...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Endpoints Ativos</div>
+        <div class="section-subtitle">12 funções serverless (limite Vercel Free)</div>
+      </div>
+      <div class="card">
+        <div class="card-body no-pad">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th>Método</th>
+                <th>Rota</th>
+                <th>Função</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody>
+                <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/webhook/meta</td><td class="primary">Meta Cloud API webhook</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/webhook/chatguru</td><td class="primary">ChatGuru webhook</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/webhook/pandape</td><td class="primary">Pandapé webhook + health check</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/webhook/evolution</td><td class="primary">Evolution API webhook</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/contacts</td><td class="primary">Lista candidatos</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">GET/POST</span></td><td class="mono">/api/messages</td><td class="primary">Mensagens (ler/enviar)</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/whatsapp/chats</td><td class="primary">Lista conversas agrupadas</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/whatsapp/chat-messages</td><td class="primary">Mensagens por telefone</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">POST</span></td><td class="mono">/api/whatsapp/send</td><td class="primary">Envio via WhatsApp</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/pandape/matches</td><td class="primary">Busca match Pandapé</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge green">POST</span></td><td class="mono">/api/cv/generate</td><td class="primary">Gera CV com Claude</td><td><span class="badge green">Ativo</span></td></tr>
+                <tr><td><span class="badge blue">GET</span></td><td class="mono">/api/cv/query</td><td class="primary">Consulta CVs gerados</td><td><span class="badge green">Ativo</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-overview -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 2: META WHATSAPP                                         -->
+  <!-- ============================================================ -->
+  <div id="tab-meta" class="tab-pane">
+
+    <div class="section">
+      <div class="alert blue">
+        <div class="alert-icon">ℹ</div>
+        <div>
+          <strong>Fonte:</strong> Meta WhatsApp Cloud API — webhook ativo em
+          <code style="font-family:monospace;background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:3px;">/api/webhook/meta</code>.
+          Mensagens entram via POST, dados armazenados em <strong>rhf_messages</strong>.
+          Identificação por <code style="font-family:monospace">raw_webhook.source = "meta_cloud_api"</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Conversas WhatsApp</div>
+      </div>
+      <div id="chats-section">
+        <div class="loading"><div class="spinner"></div> Carregando conversas...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Breakdown por Tipo de Mensagem</div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Por tipo</div></div>
+          <div class="card-body" id="msg-type-chart">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Por direção</div></div>
+          <div class="card-body" id="msg-direction-chart">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Volume de Mensagens — Últimos 7 Dias</div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="timeline-chart">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Últimas 20 Mensagens</div>
+      </div>
+      <div class="card">
+        <div class="card-body no-pad" id="recent-messages-section">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Campos Capturados — Webhook Meta</div>
+        <div class="section-subtitle">Estrutura armazenada em rhf_messages</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="schema-field">
+            <div class="schema-name">phone</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Número do remetente (wa_id extraído de <code style="font-family:monospace">message.from</code>)</div><div class="schema-example">Ex: "5511999998888"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">direction</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Detecção automática: mensagens com prefixo <code style="font-family:monospace">*NomeAgente:*</code> → outbound (via ChatGuru sign), demais → inbound</div><div class="schema-example">Ex: "inbound" | "outbound"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">content</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Texto da mensagem. Para mídia: "[Imagem]", "[Audio]", "[Video]", "[Documento]"</div><div class="schema-example">Ex: "Olá, gostaria de me candidatar"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">message_type</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Tipo mapeado: text → chat, image, audio → ptt, video/document → file, sticker → image</div><div class="schema-example">Ex: "chat" | "image" | "ptt" | "file"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">chatguru_message_id</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">WAMID (WhatsApp Message ID) extraído de <code style="font-family:monospace">message.id</code></div><div class="schema-example">Ex: "wamid.ABCDEfgh..."</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">chatguru_chat_id</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Mesmo que phone (identificador da conversa no modelo ChatGuru)</div><div class="schema-example">Ex: "5511999998888"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">raw_webhook</div>
+            <div class="schema-type">jsonb</div>
+            <div>
+              <div class="schema-desc">Metadados extras do webhook:</div>
+              <div class="schema-example">{
+  source: "meta_cloud_api",
+  contact_name: "João Silva",   // de contacts[].profile.name
+  wamid: "wamid.ABCDEfgh...",  // id original
+  type: "text"                  // tipo bruto do Meta
+}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-meta -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 3: CHATGURU                                              -->
+  <!-- ============================================================ -->
+  <div id="tab-chatguru" class="tab-pane">
+
+    <div class="section">
+      <div class="alert green">
+        <div class="alert-icon">✓</div>
+        <div>
+          <strong>Integração ativa.</strong> ChatGuru envia POSTs para
+          <code style="font-family:monospace;background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:3px;">https://rhf-proposta.vercel.app/api/webhook/chatguru</code>
+          a cada mensagem recebida ou enviada na plataforma.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Payload do Webhook ChatGuru</div>
+        <div class="section-subtitle">Campos recebidos a cada evento de mensagem</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="schema-field">
+            <div class="schema-name">nome</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Nome do contato no ChatGuru</div><div class="schema-example">Ex: "Ana Paula Santos"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">celular</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Número de telefone (qualquer formato) — normalizado com replace(/\D/g, '')</div><div class="schema-example">Ex: "(11) 9 9999-8888" → "11999998888"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">texto_mensagem</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Conteúdo textual da mensagem</div><div class="schema-example">Ex: "Tenho interesse na vaga de analista"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">tipo_mensagem</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Tipo do conteúdo enviado. Default: "chat"</div><div class="schema-example">Ex: "chat" | "image" | "audio" | "video" | "file"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">phone_id</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">ID do número WhatsApp Business no ChatGuru</div><div class="schema-example">Ex: "ph_abc123"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">chat_id</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Identificador único da conversa no ChatGuru. Salvo em chatguru_chat_id</div><div class="schema-example">Ex: "ch_xyz789"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">email</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Email do candidato (quando disponível no cadastro ChatGuru)</div><div class="schema-example">Ex: "candidato@email.com"</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">url_arquivo</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">URL do arquivo de mídia (imagens, documentos, áudios). Armazenado como content quando texto_mensagem está vazio</div><div class="schema-example">Ex: "https://cdn.chatguru.com.br/files/abc.pdf"</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Fluxo de Processamento</div>
+        <div class="section-subtitle">O que acontece quando o webhook é recebido</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">1</div>
+              <div>
+                <div style="font-weight:600;font-size:13px;margin-bottom:3px;">Recebe POST do ChatGuru</div>
+                <div style="font-size:12px;color:var(--text-sec);">Extrai: nome, celular, texto_mensagem, tipo_mensagem, chat_id, email</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">2</div>
+              <div>
+                <div style="font-weight:600;font-size:13px;margin-bottom:3px;">Upsert em candidates</div>
+                <div style="font-size:12px;color:var(--text-sec);">SELECT por phone — se existir, usa o id existente. Se não, INSERT com name + phone + chatguru_chat_id + status "new"</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">3</div>
+              <div>
+                <div style="font-weight:600;font-size:13px;margin-bottom:3px;">INSERT em rhf_messages</div>
+                <div style="font-size:12px;color:var(--text-sec);">direction sempre "inbound", content = texto_mensagem ou url_arquivo, raw_webhook = payload completo</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">4</div>
+              <div>
+                <div style="font-weight:600;font-size:13px;margin-bottom:3px;">INSERT em sync_log</div>
+                <div style="font-size:12px;color:var(--text-sec);">source = "chatguru", action = "webhook_received", status = "success". Retorna 200 em caso de erro também (evita retries do ChatGuru)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Tabelas Afetadas no Supabase</div>
+      </div>
+      <div class="card">
+        <div class="card-body no-pad">
+          <table class="data-table">
+            <thead><tr><th>Tabela</th><th>Operação</th><th>Campos Escritos</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="primary">candidates</td>
+                <td><span class="badge blue">SELECT + INSERT</span></td>
+                <td class="mono" style="white-space:normal;">name, phone, email, chatguru_chat_id, chatguru_phone_id, status, raw_data</td>
+              </tr>
+              <tr>
+                <td class="primary">rhf_messages</td>
+                <td><span class="badge green">INSERT</span></td>
+                <td class="mono" style="white-space:normal;">phone, direction, content, message_type, chatguru_chat_id, candidate_id, raw_webhook</td>
+              </tr>
+              <tr>
+                <td class="primary">sync_log</td>
+                <td><span class="badge green">INSERT</span></td>
+                <td class="mono" style="white-space:normal;">source, action, entity_type, entity_id, status, payload</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-chatguru -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 4: PANDAPÉ                                               -->
+  <!-- ============================================================ -->
+  <div id="tab-pandape" class="tab-pane">
+
+    <div class="section">
+      <div class="alert amber">
+        <div class="alert-icon">⚠</div>
+        <div>
+          <strong>Aguardando credenciais OAuth2 do cliente.</strong>
+          O webhook e toda a infraestrutura estão prontos. Assim que o cliente RHF fornecer
+          <code style="font-family:monospace;background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:3px;">PANDAPE_CLIENT_ID</code> e
+          <code style="font-family:monospace;background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:3px;">PANDAPE_CLIENT_SECRET</code>,
+          a integração entra em produção sem nenhuma mudança de código.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Webhook Health Check</div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="pandape-health-section">
+          <div class="loading"><div class="spinner"></div> Verificando endpoint...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Webhook — Evento Configurado</div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Candidato mudou de estágio em uma vaga</div>
+            <div class="card-subtitle">Pandapé dispara este evento quando o recrutador move um candidato de pasta</div>
+          </div>
+          <span class="badge amber">Aguardando config.</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-sec);margin-bottom:16px;">URL a configurar no painel Pandapé:</p>
+          <div class="code-block" style="white-space:normal;font-size:13px;padding:12px 16px;background:rgba(249,115,22,0.06);border-color:rgba(249,115,22,0.2);color:var(--orange);font-weight:700;">https://rhf-proposta.vercel.app/api/webhook/pandape</div>
+          <p style="font-size:13px;color:var(--text-sec);margin-top:20px;margin-bottom:14px;">Payload recebido:</p>
+          <div class="schema-field">
+            <div class="schema-name">IdMatch</div>
+            <div class="schema-type">number</div>
+            <div><div class="schema-desc">ID único do match (candidato ↔ vaga) no Pandapé. Usado para buscar dados completos via GET /v2/matches/{IdMatch}</div><div class="schema-example">Ex: 602649148</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">IdVacancy</div>
+            <div class="schema-type">number</div>
+            <div><div class="schema-desc">ID da vaga no Pandapé. Usado para buscar título e detalhes via GET /v2/vacancies/{IdVacancy}</div><div class="schema-example">Ex: 2656804</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">IdVacancyFolderFrom</div>
+            <div class="schema-type">number</div>
+            <div><div class="schema-desc">ID da pasta de origem (estágio anterior no funil de seleção)</div><div class="schema-example">Ex: 17098398</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">IdVacancyFolderTo</div>
+            <div class="schema-type">number</div>
+            <div><div class="schema-desc">ID da pasta de destino (novo estágio do candidato)</div><div class="schema-example">Ex: 17098395</div></div>
+          </div>
+          <div class="schema-field">
+            <div class="schema-name">EventDate</div>
+            <div class="schema-type">string</div>
+            <div><div class="schema-desc">Timestamp ISO 8601 do momento do evento no Pandapé</div><div class="schema-example">Ex: "2025-12-18T14:36:24.3750583"</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Endpoints REST Pandapé</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="endpoint-row">
+            <div class="endpoint-method get">GET</div>
+            <div>
+              <div class="endpoint-path">/v2/matches/{idMatch}</div>
+              <div class="endpoint-desc">Retorna dados completos do candidato na vaga: CandidateName, CandidateEmail, CandidatePhone, estágio atual, histórico de movimentações, dados do processo seletivo.</div>
+            </div>
+          </div>
+          <div class="endpoint-row">
+            <div class="endpoint-method get">GET</div>
+            <div>
+              <div class="endpoint-path">/v2/vacancies/{idVacancy}</div>
+              <div class="endpoint-desc">Retorna detalhes da vaga: Title, departamento, localização, requisitos, status da vaga, datas de abertura/encerramento.</div>
+            </div>
+          </div>
+          <div class="endpoint-row">
+            <div class="endpoint-method post">POST</div>
+            <div>
+              <div class="endpoint-path">/v2/vacancies</div>
+              <div class="endpoint-desc" style="color:var(--text-muted);">Cria nova vaga — disponível para Fase 2 (envio de vagas RHF para Pandapé).</div>
+            </div>
+          </div>
+          <div class="endpoint-row">
+            <div class="endpoint-method post">POST</div>
+            <div>
+              <div class="endpoint-path">/v2/requests</div>
+              <div class="endpoint-desc" style="color:var(--text-muted);">Cria requisição de vaga — disponível para Fase 2.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Autenticação OAuth2</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="code-block"><span class="comment">// 1. Obter token (client_credentials)</span>
+<span class="kw">POST</span> https://api.pandape.com.br/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+<span class="key">grant_type</span>=<span class="str">client_credentials</span>
+<span class="key">client_id</span>=<span class="str">{PANDAPE_CLIENT_ID}</span>
+<span class="key">client_secret</span>=<span class="str">{PANDAPE_CLIENT_SECRET}</span>
+
+<span class="comment">// Resposta</span>
+{
+  <span class="key">"access_token"</span>: <span class="str">"eyJhbGciOiJSUzI1..."</span>,
+  <span class="key">"token_type"</span>: <span class="str">"Bearer"</span>,
+  <span class="key">"expires_in"</span>: <span class="num">3600</span>
+}
+
+<span class="comment">// 2. Usar token em todas as requisições</span>
+Authorization: Bearer {access_token}
+
+<span class="comment">// Token cache: lib/pandape.js faz cache com buffer de 60s antes do vencimento</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-pandape -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 5: CANDIDATOS                                            -->
+  <!-- ============================================================ -->
+  <div id="tab-candidatos" class="tab-pane">
+
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Base de Candidatos</div>
+          <div class="section-subtitle">Dados em tempo real de /api/contacts</div>
+        </div>
+        <div id="candidates-filter" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="source-filter" onchange="filterCandidates()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-sec);padding:7px 12px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;">
+            <option value="">Todas as fontes</option>
+            <option value="meta_cloud_api">Meta WhatsApp</option>
+            <option value="chatguru">ChatGuru</option>
+            <option value="pandape">Pandapé</option>
+          </select>
+          <input id="search-input" placeholder="Buscar por nome ou telefone..." oninput="filterCandidates()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;width:260px;" />
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="breakdown-grid" id="candidates-source-pills">
+          <div class="breakdown-item"><div><div class="breakdown-label">Total</div><div class="breakdown-value orange" id="pill-total">—</div></div></div>
+          <div class="breakdown-item"><div><div class="breakdown-label">Meta WhatsApp</div><div class="breakdown-value blue" id="pill-meta">—</div></div></div>
+          <div class="breakdown-item"><div><div class="breakdown-label">ChatGuru</div><div class="breakdown-value green" id="pill-chatguru">—</div></div></div>
+          <div class="breakdown-item"><div><div class="breakdown-label">Pandapé</div><div class="breakdown-value amber" id="pill-pandape">—</div></div></div>
+          <div class="breakdown-item"><div><div class="breakdown-label">Sem fonte</div><div class="breakdown-value" style="color:var(--text-sec);" id="pill-unknown">—</div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body no-pad" id="candidates-table-section">
+          <div class="loading"><div class="spinner"></div> Carregando candidatos...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-candidatos -->
+
+  <!-- ============================================================ -->
+  <!-- TAB 6: FLUXO DE DADOS                                        -->
+  <!-- ============================================================ -->
+  <div id="tab-fluxo" class="tab-pane">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Arquitetura de Integração</div>
+        <div class="section-subtitle">Como os dados fluem entre as APIs e o Supabase</div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+<div class="flow-diagram"><span class="comment">╔══════════════════════════════════════════════════════════════════════╗
+║            RHF TALENTOS — FLUXO DE DADOS DAS INTEGRAÇÕES           ║
+╚══════════════════════════════════════════════════════════════════════╝</span>
+
+<span class="flow-source">Meta WhatsApp Cloud API</span>
+  │  POST (webhook — mensagem recebida de candidato)
+  ▼
+<span class="flow-handler">api/webhook/meta.js</span>
+  │  Extrai: phone (from), content, message_type, wamid, contact_name
+  │  Detecta direção via prefixo *NomeAgente:* (ChatGuru sign)
+  ├──▶ <span class="flow-table">rhf_messages</span>         ← INSERT (phone, direction, content, raw_webhook)
+  └──▶ <span class="comment">(candidates não criados aqui — somente mensagem)</span>
+
+
+<span class="flow-source">ChatGuru API</span>
+  │  POST (webhook — mensagem recebida ou enviada)
+  ▼
+<span class="flow-handler">api/webhook/chatguru.js</span>
+  │  Extrai: nome, celular, texto_mensagem, tipo_mensagem, chat_id
+  ├──▶ <span class="flow-table">candidates</span>            ← SELECT por phone / INSERT se novo
+  ├──▶ <span class="flow-table">rhf_messages</span>         ← INSERT (direction sempre inbound)
+  └──▶ <span class="flow-table">sync_log</span>             ← INSERT (source="chatguru", action="webhook_received")
+
+
+<span class="flow-source">Pandapé ATS</span>                 <span class="badge amber" style="font-size:11px;">⚠ Aguardando credenciais</span>
+  │  POST (webhook — candidato mudou de estágio)
+  ▼
+<span class="flow-handler">api/webhook/pandape.js</span>
+  │  Valida secret, extrai {IdMatch, IdVacancy, IdVacancyFolderTo, EventDate}
+  │  Busca dados completos na API:
+  ├──▶ GET /v2/matches/{IdMatch}    → nome, email, telefone do candidato
+  ├──▶ GET /v2/vacancies/{IdVacancy} → título e dados da vaga
+  ├──▶ <span class="flow-table">candidates</span>            ← UPSERT (conflict on match_id)
+  └──▶ <span class="flow-table">sync_log</span>             ← INSERT (source="pandape", action="stage_changed")
+
+
+<span class="flow-source">Claude API (Anthropic)</span>
+  │  POST (geração de CV estruturado)
+  ▼
+<span class="flow-handler">api/cv/generate.js</span>
+  │  Lê candidato + histórico de mensagens
+  └──▶ <span class="flow-table">generated_cvs</span>        ← INSERT (cv_text, candidate_id, generated_at)
+
+
+<span class="comment">════════════════════════ CONSULTAS (READ) ════════════════════════</span>
+
+<span class="flow-handler">api/contacts.js</span>         GET /api/contacts?limit=N
+  └──▶ <span class="flow-table">candidates</span>            ← SELECT (ordem: created_at desc)
+
+<span class="flow-handler">api/messages.js</span>         GET /api/messages?phone=N
+  └──▶ <span class="flow-table">rhf_messages</span>         ← SELECT (filtro por phone)
+
+<span class="flow-handler">api/whatsapp/chats.js</span>   GET /api/whatsapp/chats
+  ├──▶ <span class="flow-table">rhf_messages</span>         ← SELECT 2000 msgs (group by phone)
+  └──▶ <span class="flow-table">candidates</span>            ← SELECT (name lookup)
+
+<span class="flow-handler">api/cv/query.js</span>         GET /api/cv/query
+  └──▶ <span class="flow-table">generated_cvs</span>        ← SELECT
+
+
+<span class="comment">════════════════════════ SUPABASE TABLES ═════════════════════════</span>
+
+<span class="flow-table">candidates</span>       id, name, phone, email, location, experience_years,
+                 education, skills, pandape_id, chatguru_chat_id,
+                 status, match_id, vacancy_id, vacancy_name,
+                 stage, raw_data, created_at
+
+<span class="flow-table">rhf_messages</span>     id, phone, direction, content, message_type,
+                 chatguru_message_id, chatguru_chat_id, candidate_id,
+                 raw_webhook, created_at
+
+<span class="flow-table">generated_cvs</span>    id, candidate_id, cv_text, generated_at
+
+<span class="flow-table">sync_log</span>         id, source, action, entity_type, entity_id,
+                 status, payload, error_message, created_at</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Configuração de Ambiente</div>
+        <div class="section-subtitle">Variáveis de ambiente necessárias (Vercel Project Settings)</div>
+      </div>
+      <div class="card">
+        <div class="card-body no-pad">
+          <table class="data-table">
+            <thead><tr><th>Variável</th><th>Integração</th><th>Status</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">SUPABASE_URL</td><td>Supabase</td><td><span class="badge green">Configurado</span></td><td class="primary">URL do projeto Supabase</td></tr>
+              <tr><td class="mono">SUPABASE_ANON_KEY</td><td>Supabase</td><td><span class="badge green">Configurado</span></td><td class="primary">Chave pública anon</td></tr>
+              <tr><td class="mono">META_VERIFY_TOKEN</td><td>Meta WhatsApp</td><td><span class="badge green">Configurado</span></td><td class="primary">Token de verificação do webhook</td></tr>
+              <tr><td class="mono">CHATGURU_API_TOKEN</td><td>ChatGuru</td><td><span class="badge green">Configurado</span></td><td class="primary">Token Bearer para envio via ChatGuru</td></tr>
+              <tr><td class="mono">ANTHROPIC_API_KEY</td><td>Claude API</td><td><span class="badge green">Configurado</span></td><td class="primary">Chave para geração de CVs</td></tr>
+              <tr><td class="mono">PANDAPE_CLIENT_ID</td><td>Pandapé</td><td><span class="badge amber">Pendente</span></td><td class="primary">Client ID OAuth2 do Pandapé</td></tr>
+              <tr><td class="mono">PANDAPE_CLIENT_SECRET</td><td>Pandapé</td><td><span class="badge amber">Pendente</span></td><td class="primary">Client Secret OAuth2 do Pandapé</td></tr>
+              <tr><td class="mono">PANDAPE_WEBHOOK_SECRET</td><td>Pandapé</td><td><span class="badge gray">Opcional</span></td><td class="primary">Secret para verificar autenticidade do webhook</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-fluxo -->
+
+</div><!-- /page-wrapper -->
+
+<!-- ===== REFRESH BAR ===== -->
+<div class="refresh-bar" id="refresh-bar">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+  Próxima atualização em <span class="refresh-countdown" id="bar-countdown">60s</span>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let allCandidates = [];
+let allMessages = [];
+let allChats = [];
+let refreshTimer = null;
+let countdownTimer = null;
+let secondsLeft = 60;
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
+}
+
+function fmtRelative(iso) {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'agora';
+  if (m < 60) return `${m}m atrás`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h atrás`;
+  return `${Math.floor(h / 24)}d atrás`;
+}
+
+function truncate(s, n) {
+  if (!s) return '—';
+  s = String(s);
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function sourceBadge(src) {
+  if (src === 'meta_cloud_api') return '<span class="badge blue">Meta</span>';
+  if (src === 'chatguru') return '<span class="badge green">ChatGuru</span>';
+  if (src === 'pandape') return '<span class="badge amber">Pandapé</span>';
+  return '<span class="badge gray">—</span>';
+}
+
+function getSource(candidate) {
+  if (candidate.raw_data && candidate.raw_data.source) return candidate.raw_data.source;
+  if (candidate.match_id) return 'pandape';
+  if (candidate.chatguru_chat_id) return 'chatguru';
+  return null;
+}
+
+// ============================================================
+// FETCH HELPERS
+// ============================================================
+async function safeFetch(url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('Fetch error:', url, e.message);
+    return null;
+  }
+}
+
+// ============================================================
+// OVERVIEW
+// ============================================================
+async function loadOverview() {
+  // Load candidates count
+  const contactsData = await safeFetch('/api/contacts?limit=500');
+  if (contactsData && contactsData.data) {
+    allCandidates = contactsData.data;
+    document.getElementById('stat-candidates').textContent = allCandidates.length;
+    renderSourceBreakdown();
+  }
+
+  // Load chats
+  const chatsData = await safeFetch('/api/whatsapp/chats');
+  if (chatsData && chatsData.data) {
+    allChats = chatsData.data;
+    document.getElementById('stat-chats').textContent = allChats.length;
+    const totalMsgs = allChats.reduce((s, c) => s + (c.messageCount || 0), 0);
+    document.getElementById('stat-messages').textContent = totalMsgs.toLocaleString('pt-BR');
+  }
+
+  // Load CVs
+  const cvsData = await safeFetch('/api/cv/query');
+  if (cvsData && cvsData.data) {
+    document.getElementById('stat-cvs').textContent = cvsData.data.length;
+  } else {
+    document.getElementById('stat-cvs').textContent = '0';
+  }
+}
+
+function renderSourceBreakdown() {
+  const counts = { meta_cloud_api: 0, chatguru: 0, pandape: 0, unknown: 0 };
+  allCandidates.forEach(c => {
+    const src = getSource(c);
+    if (src === 'meta_cloud_api') counts.meta_cloud_api++;
+    else if (src === 'chatguru') counts.chatguru++;
+    else if (src === 'pandape') counts.pandape++;
+    else counts.unknown++;
+  });
+
+  const total = allCandidates.length;
+  const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
+  const items = [
+    { label: 'Meta WhatsApp', count: counts.meta_cloud_api, cls: 'blue', pct: pct(counts.meta_cloud_api) },
+    { label: 'ChatGuru', count: counts.chatguru, cls: 'green', pct: pct(counts.chatguru) },
+    { label: 'Pandapé', count: counts.pandape, cls: 'amber', pct: pct(counts.pandape) },
+    { label: 'Sem fonte', count: counts.unknown, cls: 'orange', pct: pct(counts.unknown) },
+  ];
+
+  const el = document.getElementById('source-breakdown');
+  if (total === 0) {
+    el.innerHTML = '<div class="empty">Nenhum candidato encontrado</div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="bar-chart">' + items.map(i => `
+    <div class="bar-row">
+      <div class="bar-label wide">${escHtml(i.label)}</div>
+      <div class="bar-track"><div class="bar-fill ${i.cls}" style="width:${i.pct}%"></div></div>
+      <div class="bar-count">${i.count}</div>
+      <div style="font-size:11px;color:var(--text-muted);width:36px;">${i.pct}%</div>
+    </div>
+  `).join('') + '</div>';
+}
+
+// ============================================================
+// META WHATSAPP
+// ============================================================
+async function loadMeta() {
+  const chatsData = await safeFetch('/api/whatsapp/chats');
+  if (!chatsData || !chatsData.data) {
+    document.getElementById('chats-section').innerHTML = '<div class="empty">Erro ao carregar conversas</div>';
+    return;
+  }
+  allChats = chatsData.data;
+
+  // Render chats table
+  renderChatsTable(allChats);
+
+  // Fetch recent messages for breakdown
+  const msgsData = await safeFetch('/api/messages?limit=500');
+  if (msgsData && msgsData.data) {
+    allMessages = msgsData.data;
+    renderMsgTypeChart(allMessages);
+    renderMsgDirectionChart(allMessages);
+    renderTimeline(allMessages);
+    renderRecentMessages(allMessages.slice(0, 20));
+  }
+}
+
+function renderChatsTable(chats) {
+  const el = document.getElementById('chats-section');
+  if (!chats.length) {
+    el.innerHTML = '<div class="empty">Nenhuma conversa encontrada</div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Conversas (${chats.length})</div>
+        <div class="card-subtitle">Agrupado por número de telefone</div>
+      </div>
+      <div class="card-body no-pad">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th onclick="sortTable(this,'chats-table',0)">Contato</th>
+              <th onclick="sortTable(this,'chats-table',1)">Telefone</th>
+              <th onclick="sortTable(this,'chats-table',2)">Última mensagem</th>
+              <th onclick="sortTable(this,'chats-table',3)" style="text-align:right">Msgs</th>
+              <th onclick="sortTable(this,'chats-table',4)" style="text-align:right">Recebidas</th>
+              <th onclick="sortTable(this,'chats-table',5)">Atualizado</th>
+            </tr></thead>
+            <tbody id="chats-table">
+              ${chats.slice(0, 100).map(c => `
+                <tr>
+                  <td class="primary">${escHtml(c.name !== c.phone ? c.name : '—')}</td>
+                  <td class="mono">${escHtml(c.phone)}</td>
+                  <td>${escHtml(truncate(c.lastMessage, 60))}</td>
+                  <td style="text-align:right;font-weight:700;">${c.messageCount || 0}</td>
+                  <td style="text-align:right;">${c.unreadCount || 0}</td>
+                  <td>${fmtRelative(c.lastMessageTimestamp)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMsgTypeChart(msgs) {
+  const counts = {};
+  msgs.forEach(m => {
+    const t = m.message_type || 'chat';
+    counts[t] = (counts[t] || 0) + 1;
+  });
+
+  const colors = { chat: 'orange', image: 'blue', ptt: 'green', file: 'purple', video: 'amber' };
+  const max = Math.max(...Object.values(counts), 1);
+  const el = document.getElementById('msg-type-chart');
+  if (!msgs.length) { el.innerHTML = '<div class="empty">Sem dados</div>'; return; }
+
+  el.innerHTML = '<div class="bar-chart">' +
+    Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([t, n]) => `
+      <div class="bar-row">
+        <div class="bar-label">${escHtml(t)}</div>
+        <div class="bar-track"><div class="bar-fill ${colors[t] || 'orange'}" style="width:${Math.round(n/max*100)}%"></div></div>
+        <div class="bar-count">${n}</div>
+      </div>
+    `).join('') + '</div>';
+}
+
+function renderMsgDirectionChart(msgs) {
+  const inbound = msgs.filter(m => m.direction === 'inbound').length;
+  const outbound = msgs.filter(m => m.direction === 'outbound').length;
+  const max = Math.max(inbound, outbound, 1);
+  const el = document.getElementById('msg-direction-chart');
+  if (!msgs.length) { el.innerHTML = '<div class="empty">Sem dados</div>'; return; }
+
+  el.innerHTML = `<div class="bar-chart">
+    <div class="bar-row">
+      <div class="bar-label">inbound</div>
+      <div class="bar-track"><div class="bar-fill blue" style="width:${Math.round(inbound/max*100)}%"></div></div>
+      <div class="bar-count">${inbound}</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">outbound</div>
+      <div class="bar-track"><div class="bar-fill orange" style="width:${Math.round(outbound/max*100)}%"></div></div>
+      <div class="bar-count">${outbound}</div>
+    </div>
+  </div>
+  <div style="margin-top:16px;font-size:12px;color:var(--text-muted);">
+    Outbound via ChatGuru detectado pelo prefixo <code style="font-family:monospace">*NomeAgente:*</code>
+  </div>`;
+}
+
+function renderTimeline(msgs) {
+  // Group by day (last 7 days)
+  const days = {};
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    days[key] = { label, count: 0 };
+  }
+
+  msgs.forEach(m => {
+    if (!m.created_at) return;
+    const key = m.created_at.slice(0, 10);
+    if (days[key]) days[key].count++;
+  });
+
+  const max = Math.max(...Object.values(days).map(d => d.count), 1);
+  const el = document.getElementById('timeline-chart');
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:8px;height:80px;margin-bottom:8px;">
+      ${Object.values(days).map(d => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;">
+          <div style="flex:1;display:flex;align-items:flex-end;width:100%;">
+            <div style="width:100%;background:var(--orange);border-radius:3px 3px 0 0;height:${Math.max(d.count ? Math.round(d.count/max*100) : 4, d.count ? 4 : 2)}%;min-height:${d.count > 0 ? '4' : '2'}px;opacity:${d.count > 0 ? 1 : 0.2};transition:height 0.5s;"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="display:flex;gap:8px;">
+      ${Object.values(days).map(d => `
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);">${d.label}</div>
+          <div style="font-size:11px;font-weight:700;color:${d.count > 0 ? 'var(--text)' : 'var(--text-muted)'};">${d.count}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderRecentMessages(msgs) {
+  const el = document.getElementById('recent-messages-section');
+  if (!msgs.length) { el.innerHTML = '<div class="empty">Sem mensagens</div>'; return; }
+
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>Telefone</th>
+          <th>Direção</th>
+          <th>Tipo</th>
+          <th>Conteúdo</th>
+          <th>Quando</th>
+        </tr></thead>
+        <tbody>
+          ${msgs.map(m => `
+            <tr>
+              <td class="mono">${escHtml(m.phone)}</td>
+              <td>${m.direction === 'inbound' ? '<span class="badge blue">inbound</span>' : '<span class="badge orange">outbound</span>'}</td>
+              <td><span class="badge gray">${escHtml(m.message_type || 'chat')}</span></td>
+              <td>${escHtml(truncate(m.content, 80))}</td>
+              <td style="white-space:nowrap">${fmtRelative(m.created_at)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ============================================================
+// PANDAPÉ HEALTH CHECK
+// ============================================================
+async function loadPandapeHealth() {
+  const el = document.getElementById('pandape-health-section');
+  const data = await safeFetch('/api/webhook/pandape');
+
+  if (data && data.status === 'ok') {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="status-dot green" style="width:10px;height:10px;"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--green);">Endpoint respondendo</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-sec);margin-bottom:16px;">
+        Webhook está ativo e pronto para receber eventos do Pandapé.<br>
+        Aguarda apenas as credenciais OAuth2 para processar dados reais.
+      </div>
+      <div class="code-block" style="font-size:12px;">${escHtml(JSON.stringify(data, null, 2))}</div>
+    `;
+  } else {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="status-dot red"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--red);">Endpoint não respondeu</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">Verifique se o deploy está ativo no Vercel.</div>
+    `;
+  }
+}
+
+// ============================================================
+// CANDIDATES TABLE
+// ============================================================
+function renderCandidatesTable(candidates) {
+  const el = document.getElementById('candidates-table-section');
+  if (!candidates.length) {
+    el.innerHTML = '<div class="empty">Nenhum candidato encontrado com os filtros selecionados</div>';
+    return;
+  }
+
+  // Update pills
+  updateCandidatePills(allCandidates);
+
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table" id="candidates-table">
+        <thead><tr>
+          <th onclick="sortTable(this,'candidates-table',0)">Nome</th>
+          <th onclick="sortTable(this,'candidates-table',1)">Telefone</th>
+          <th onclick="sortTable(this,'candidates-table',2)">Email</th>
+          <th onclick="sortTable(this,'candidates-table',3)">Fonte</th>
+          <th onclick="sortTable(this,'candidates-table',4)">Status</th>
+          <th onclick="sortTable(this,'candidates-table',5)">Vaga</th>
+          <th onclick="sortTable(this,'candidates-table',6)">Estágio</th>
+          <th onclick="sortTable(this,'candidates-table',7)">ChatGuru ID</th>
+          <th onclick="sortTable(this,'candidates-table',8)">Match ID</th>
+          <th onclick="sortTable(this,'candidates-table',9)">Criado em</th>
+        </tr></thead>
+        <tbody>
+          ${candidates.map(c => {
+            const src = getSource(c);
+            return `
+              <tr>
+                <td class="primary">${escHtml(c.name || '—')}</td>
+                <td class="mono">${escHtml(c.phone || '—')}</td>
+                <td>${escHtml(truncate(c.email, 30))}</td>
+                <td>${sourceBadge(src)}</td>
+                <td>${c.status ? `<span class="badge gray">${escHtml(c.status)}</span>` : '—'}</td>
+                <td>${escHtml(truncate(c.vacancy_name, 25))}</td>
+                <td>${escHtml(c.stage || '—')}</td>
+                <td class="mono">${escHtml(c.chatguru_chat_id || '—')}</td>
+                <td class="mono">${escHtml(c.match_id || '—')}</td>
+                <td style="white-space:nowrap">${fmtDate(c.created_at)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:12px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);">
+      Exibindo ${candidates.length} de ${allCandidates.length} candidatos
+    </div>
+  `;
+}
+
+function updateCandidatePills(candidates) {
+  const counts = { meta_cloud_api: 0, chatguru: 0, pandape: 0, unknown: 0 };
+  candidates.forEach(c => {
+    const src = getSource(c);
+    if (src === 'meta_cloud_api') counts.meta_cloud_api++;
+    else if (src === 'chatguru') counts.chatguru++;
+    else if (src === 'pandape') counts.pandape++;
+    else counts.unknown++;
+  });
+  document.getElementById('pill-total').textContent = candidates.length;
+  document.getElementById('pill-meta').textContent = counts.meta_cloud_api;
+  document.getElementById('pill-chatguru').textContent = counts.chatguru;
+  document.getElementById('pill-pandape').textContent = counts.pandape;
+  document.getElementById('pill-unknown').textContent = counts.unknown;
+}
+
+function filterCandidates() {
+  const srcFilter = document.getElementById('source-filter').value;
+  const search = document.getElementById('search-input').value.toLowerCase();
+
+  let filtered = allCandidates;
+  if (srcFilter) filtered = filtered.filter(c => getSource(c) === srcFilter);
+  if (search) filtered = filtered.filter(c =>
+    (c.name || '').toLowerCase().includes(search) ||
+    (c.phone || '').includes(search) ||
+    (c.email || '').toLowerCase().includes(search)
+  );
+
+  renderCandidatesTable(filtered);
+}
+
+async function loadCandidates() {
+  if (!allCandidates.length) {
+    const data = await safeFetch('/api/contacts?limit=500');
+    if (data && data.data) allCandidates = data.data;
+  }
+  renderCandidatesTable(allCandidates);
+  updateCandidatePills(allCandidates);
+}
+
+// ============================================================
+// SORTABLE TABLES
+// ============================================================
+function sortTable(th, tableId, colIndex) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const asc = th.dataset.sort !== 'asc';
+  th.dataset.sort = asc ? 'asc' : 'desc';
+
+  // Reset all headers
+  th.closest('thead').querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
+  th.classList.add('sorted');
+  th.textContent = th.textContent.replace(/ [▲▼]$/, '') + (asc ? ' ▲' : ' ▼');
+
+  rows.sort((a, b) => {
+    const aVal = (a.cells[colIndex] && a.cells[colIndex].textContent) || '';
+    const bVal = (b.cells[colIndex] && b.cells[colIndex].textContent) || '';
+    const num_a = parseFloat(aVal.replace(/[^0-9.-]/g,''));
+    const num_b = parseFloat(bVal.replace(/[^0-9.-]/g,''));
+    if (!isNaN(num_a) && !isNaN(num_b)) return asc ? num_a - num_b : num_b - num_a;
+    return asc ? aVal.localeCompare(bVal, 'pt-BR') : bVal.localeCompare(aVal, 'pt-BR');
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ============================================================
+// REFRESH
+// ============================================================
+function updateTimestamp() {
+  const now = new Date().toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+  const el = document.getElementById('last-updated-time');
+  if (el) el.textContent = now;
+}
+
+function startCountdown() {
+  secondsLeft = 60;
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    secondsLeft--;
+    const el1 = document.getElementById('next-refresh-countdown');
+    const el2 = document.getElementById('bar-countdown');
+    if (el1) el1.textContent = secondsLeft + 's';
+    if (el2) el2.textContent = secondsLeft + 's';
+    if (secondsLeft <= 0) clearInterval(countdownTimer);
+  }, 1000);
+}
+
+async function refreshAll() {
+  updateTimestamp();
+  startCountdown();
+  await Promise.all([
+    loadOverview(),
+    loadMeta(),
+    loadPandapeHealth(),
+    loadCandidates(),
+  ]);
+}
+
+function scheduleAutoRefresh() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(async () => {
+    await refreshAll();
+    scheduleAutoRefresh();
+  }, 60000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  updateTimestamp();
+  startCountdown();
+  await refreshAll();
+  scheduleAutoRefresh();
+});
+</script>
+
+</body>
+</html>

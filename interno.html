@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise Interna | RHF Talentos - u4digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080c;
+    --bg-card: #0e0e16;
+    --bg-card-alt: #12121c;
+    --border: #1a1a2a;
+    --border-accent: #282844;
+    --text: #e0e0ec;
+    --text-sec: #8888a4;
+    --text-muted: #555570;
+    --blue: #4A6CF7;
+    --blue-dim: rgba(74,108,247,0.10);
+    --green: #2d8a4e;
+    --green-dim: rgba(45,138,78,0.10);
+    --red: #c44040;
+    --red-dim: rgba(196,64,64,0.08);
+    --amber: #c49a30;
+    --amber-dim: rgba(196,154,48,0.08);
+    --purple: #7a6abf;
+    --purple-dim: rgba(122,106,191,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 60px 40px 100px; }
+
+  header { padding: 40px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+  header .tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); background: var(--red-dim); padding: 4px 12px; border-radius: 100px; margin-bottom: 16px; }
+  header h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 12px; }
+  header p { font-size: 15px; color: var(--text-sec); max-width: 600px; }
+  header .meta { display: flex; gap: 20px; margin-top: 20px; font-size: 12px; color: var(--text-muted); }
+
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 56px 0 8px; padding-top: 40px; border-top: 1px solid var(--border); }
+  h2 .num { color: var(--blue); font-size: 13px; font-weight: 600; letter-spacing: 0.1em; display: block; margin-bottom: 6px; }
+  h3 { font-size: 17px; font-weight: 600; margin: 28px 0 8px; color: var(--text); }
+  p, li { font-size: 14px; color: var(--text-sec); }
+  p { margin-bottom: 12px; max-width: 750px; }
+  ul, ol { padding-left: 20px; margin-bottom: 16px; }
+  li { margin-bottom: 6px; line-height: 1.6; }
+  strong { color: var(--text); font-weight: 600; }
+  em.warn { color: var(--amber); font-style: normal; font-weight: 500; }
+  em.risk { color: var(--red); font-style: normal; font-weight: 500; }
+  em.good { color: var(--green); font-style: normal; font-weight: 500; }
+  em.blue { color: var(--blue); font-style: normal; font-weight: 500; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 24px 28px; margin: 20px 0; }
+  .card.green { border-color: rgba(45,138,78,0.25); background: linear-gradient(135deg, var(--green-dim), transparent); }
+  .card.red { border-color: rgba(196,64,64,0.2); background: linear-gradient(135deg, var(--red-dim), transparent); }
+  .card.amber { border-color: rgba(196,154,48,0.2); background: linear-gradient(135deg, var(--amber-dim), transparent); }
+  .card.blue { border-color: rgba(74,108,247,0.2); background: linear-gradient(135deg, var(--blue-dim), transparent); }
+
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+  th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-sec); }
+  tr:hover td { background: var(--bg-card); }
+  td:first-child { color: var(--text); font-weight: 500; }
+  .val { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
+  .val.green { color: var(--green); }
+  .val.red { color: var(--red); }
+  .val.amber { color: var(--amber); }
+  .val.blue { color: var(--blue); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .mini-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .mini-card .label { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+  .mini-card .value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  .toc { margin: 24px 0 40px; }
+  .toc a { display: block; font-size: 14px; color: var(--blue); text-decoration: none; padding: 6px 0; }
+  .toc a:hover { text-decoration: underline; }
+
+  .verdict { font-size: 18px; font-weight: 700; margin: 12px 0; }
+
+  @media (max-width: 768px) {
+    .container { padding: 40px 20px 80px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    header h1 { font-size: 28px; }
+    h2 { font-size: 20px; }
+  }
+  @media print {
+    body { background: #fff; color: #111; }
+    .card { border: 1px solid #ddd; background: #f9f9f9; }
+    td, th { border-color: #ddd; }
+    em.warn, em.risk, em.good, em.blue { color: #111; font-weight: 700; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH GUARD — must be first in body -->
+<script>
+(function(){
+  document.documentElement.style.visibility='hidden';
+  var t=localStorage.getItem('rhf_token');
+  if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
+  fetch('/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+    .then(function(r){
+      if(r.ok){document.documentElement.style.visibility='';}
+      else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
+    })
+    .catch(function(){localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');});
+})();
+</script>
+
+<div class="container">
+
+<header>
+  <div class="tag">Documento interno &mdash; n&atilde;o compartilhar com cliente</div>
+  <h1>An&aacute;lise Interna: Projeto RHF Talentos</h1>
+  <p>Planejamento de custos, precifica&ccedil;&atilde;o, riscos e oportunidades para o piloto de automa&ccedil;&atilde;o com IA na RHF Talentos Vale dos Sinos.</p>
+  <div class="meta">
+    <span>u4digital</span>
+    <span>24 de abril de 2026</span>
+    <span>Equipe: Tiago Donicht, Moroni Reis, Gustavo</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <strong style="font-size: 12px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;">Conte&uacute;do</strong>
+  <a href="#resumo">1. Resumo executivo da call</a>
+  <a href="#custos">2. Custos estimados do projeto</a>
+  <a href="#precificacao">3. Sugest&atilde;o de precifica&ccedil;&atilde;o</a>
+  <a href="#cenarios">4. Cen&aacute;rios de margem</a>
+  <a href="#riscos">5. Riscos e mitiga&ccedil;&otilde;es</a>
+  <a href="#aberturas">6. Aberturas e oportunidades</a>
+  <a href="#decisoes">7. Decis&otilde;es pendentes</a>
+</nav>
+
+<!-- ============================================ -->
+<h2 id="resumo"><span class="num">01</span>Resumo executivo da call</h2>
+
+<p><strong>Cliente:</strong> Rodrigo Silva &mdash; franqueado RHF Talentos, unidade Vale dos Sinos (9 anos de opera&ccedil;&atilde;o).</p>
+<p><strong>Rede:</strong> 300+ unidades, ~90% usam Pandap&eacute; (ATS oficial). CRM do franqueador foi cancelado.</p>
+<p><strong>Modelo de neg&oacute;cio:</strong> 100% por sucesso. S&oacute; ganha quando coloca candidato. Ticket m&eacute;dio R$ 2.500. Volume: 50-60 processos/m&ecirc;s, 10-20 curr&iacute;culos/dia.</p>
+
+<h3>Ferramentas atuais do Rodrigo</h3>
+<ul>
+  <li><strong>Pandap&eacute;</strong> &mdash; ATS oficial da franquia (tem API). Funil de vagas e candidatos.</li>
+  <li><strong>ChatGuru</strong> &mdash; WhatsApp API oficial. Contrato de 12 meses (outubro 2025 &rarr; outubro 2026). Tem API, webhooks, campos personalizados, automa&ccedil;&otilde;es.</li>
+  <li><strong>ChatGPT</strong> &mdash; Conta com API, mas usa manual (copiar/colar). Gera descritivos de vaga e resumos profissionais.</li>
+  <li><strong>MS Office 365</strong> &mdash; Forms para abertura de vagas, OneNote para dados, Word templates para curr&iacute;culo.</li>
+</ul>
+
+<h3>Dor priorit&aacute;ria (Rodrigo confirmou na call)</h3>
+<div class="card red">
+  <p style="margin: 0;"><strong>Prepara&ccedil;&atilde;o do curr&iacute;culo.</strong> Pandap&eacute; &rarr; ChatGPT &rarr; Word &rarr; PDF &rarr; ChatGuru. S&atilde;o 15-20 min por curr&iacute;culo, 10-20x ao dia. &Eacute; o processo que mais consome tempo e mais gera erros por copia e cola.</p>
+</div>
+
+<h3>O que Rodrigo deixou claro</h3>
+<ul>
+  <li>N&atilde;o quer mudan&ccedil;as bruscas &mdash; est&aacute; cumprindo metas e n&atilde;o quer desestabilizar.</li>
+  <li>N&atilde;o quer substituir o ChatGuru agora (contrato ativo, est&aacute; funcionando).</li>
+  <li>Quer gerar mais caixa este ano para investir mais depois.</li>
+  <li>Est&aacute; aberto a ser case de valida&ccedil;&atilde;o e apresentar para o franqueador.</li>
+  <li>Outro franqueado j&aacute; criou um sistema pr&oacute;prio (RecrutaFlow), mas Rodrigo considera arriscado investir nele.</li>
+</ul>
+
+<!-- ============================================ -->
+<h2 id="custos"><span class="num">02</span>Custos estimados do projeto</h2>
+
+<h3>Custos de desenvolvimento (one-time)</h3>
+<table>
+  <thead><tr><th>Item</th><th>Horas est.</th><th>Custo interno</th><th>Obs.</th></tr></thead>
+  <tbody>
+    <tr><td>Integra&ccedil;&atilde;o Pandap&eacute; API</td><td class="val">20-30h</td><td class="val">~R$ 1.500</td><td>API existe mas precisa mapear endpoints de candidatos, vagas e funil</td></tr>
+    <tr><td>Integra&ccedil;&atilde;o ChatGuru API</td><td class="val">15-20h</td><td class="val">~R$ 1.000</td><td>API documentada, webhooks dispon&iacute;veis, campos personalizados</td></tr>
+    <tr><td>Motor IA (resumo profissional)</td><td class="val">15-20h</td><td class="val">~R$ 800</td><td>Prompt engineering + pipeline de dados + valida&ccedil;&atilde;o</td></tr>
+    <tr><td>Gerador PDF (template RHF)</td><td class="val">10-15h</td><td class="val">~R$ 600</td><td>Template branded, filtro de dados sens&iacute;veis, formata&ccedil;&atilde;o</td></tr>
+    <tr><td>Sync bidirecional de funis</td><td class="val">15-20h</td><td class="val">~R$ 1.000</td><td>Webhooks + mapeamento de est&aacute;gios entre os dois sistemas</td></tr>
+    <tr><td>Abertura inteligente de vaga</td><td class="val">10-15h</td><td class="val">~R$ 600</td><td>Forms &rarr; IA &rarr; Pandap&eacute; API (descritivo + roteiro + cria&ccedil;&atilde;o)</td></tr>
+    <tr><td>Dashboard gerencial</td><td class="val">20-25h</td><td class="val">~R$ 1.200</td><td>M&eacute;tricas b&aacute;sicas, pode ser simplificado na v1</td></tr>
+    <tr><td>Testes + ajustes + deploy</td><td class="val">15-20h</td><td class="val">~R$ 800</td><td>QA, treinamento, documenta&ccedil;&atilde;o</td></tr>
+    <tr style="background: var(--bg-card);"><td><strong>Total estimado</strong></td><td class="val blue"><strong>120-165h</strong></td><td class="val blue"><strong>R$ 7.500</strong></td><td>Pior caso. Melhor caso ~R$ 5.500</td></tr>
+  </tbody>
+</table>
+
+<h3>Custos recorrentes (mensal)</h3>
+<table>
+  <thead><tr><th>Item</th><th>Custo/m&ecirc;s</th><th>Obs.</th></tr></thead>
+  <tbody>
+    <tr><td>API OpenAI / Claude (IA)</td><td class="val">R$ 50-150</td><td>~20 curr&iacute;culos/dia &times; 22 dias = 440 chamadas. GPT-4o-mini ou Claude Haiku mant&eacute;m custo baixo.</td></tr>
+    <tr><td>Infraestrutura (hosting)</td><td class="val">R$ 0-50</td><td>Vercel free tier ou Supabase edge functions. Volume baixo.</td></tr>
+    <tr><td>Suporte e manuten&ccedil;&atilde;o</td><td class="val">R$ 200-400</td><td>2-4h/m&ecirc;s para ajustes, bugs, novos campos. Precificar na recorr&ecirc;ncia.</td></tr>
+    <tr style="background: var(--bg-card);"><td><strong>Total recorrente</strong></td><td class="val amber"><strong>R$ 250-600/m&ecirc;s</strong></td><td>Custo real nosso</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================ -->
+<h2 id="precificacao"><span class="num">03</span>Sugest&atilde;o de precifica&ccedil;&atilde;o</h2>
+
+<p>Tr&ecirc;s op&ccedil;&otilde;es de pricing para discutir internamente. O Rodrigo &eacute; uma franquia de porte m&eacute;dio, n&atilde;o &eacute; enterprise &mdash; mas o potencial de rede justifica um pre&ccedil;o agressivo no piloto.</p>
+
+<div class="grid-2">
+  <div class="card green">
+    <h3 style="margin-top: 0; color: var(--green);">Op&ccedil;&atilde;o A &mdash; Piloto agressivo</h3>
+    <p><strong>Setup:</strong> R$ 3.500 (ou 3x R$ 1.167)</p>
+    <p><strong>Recorr&ecirc;ncia:</strong> R$ 497/m&ecirc;s</p>
+    <p style="margin: 0;"><em class="good">Pr&oacute;s:</em> Barreira de entrada baixa, facilita o sim. Margem menor no setup mas recorr&ecirc;ncia compensa em 6-8 meses. Ideal se priorizamos o case para a rede.</p>
+  </div>
+  <div class="card blue">
+    <h3 style="margin-top: 0; color: var(--blue);">Op&ccedil;&atilde;o B &mdash; Padr&atilde;o</h3>
+    <p><strong>Setup:</strong> R$ 5.000 (ou 3x R$ 1.667)</p>
+    <p><strong>Recorr&ecirc;ncia:</strong> R$ 497/m&ecirc;s</p>
+    <p style="margin: 0;"><em class="blue">Pr&oacute;s:</em> Margem saud&aacute;vel no setup. Valor justo para o escopo. &Eacute; o que est&aacute; na proposta atual do cliente.</p>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card amber">
+    <h3 style="margin-top: 0; color: var(--amber);">Op&ccedil;&atilde;o C &mdash; Premium</h3>
+    <p><strong>Setup:</strong> R$ 7.000 (ou 4x R$ 1.750)</p>
+    <p><strong>Recorr&ecirc;ncia:</strong> R$ 697/m&ecirc;s</p>
+    <p style="margin: 0;"><em class="warn">Pr&oacute;s:</em> Margem alta. Inclui dashboard avan&ccedil;ado + 60 dias de suporte. Risco: pode assustar num primeiro projeto.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top: 0; color: var(--purple);">Op&ccedil;&atilde;o D &mdash; Revenue Share</h3>
+    <p><strong>Setup:</strong> R$ 2.000 (custo m&iacute;nimo)</p>
+    <p><strong>Recorr&ecirc;ncia:</strong> R$ 297/m&ecirc;s + 5% sobre incremento de faturamento</p>
+    <p style="margin: 0;"><em style="color: var(--purple);">Pr&oacute;s:</em> Alinha incentivos. Risco: dif&iacute;cil medir incremento. S&oacute; funciona com dashboard de m&eacute;tricas rodando.</p>
+  </div>
+</div>
+
+<div class="card">
+  <p class="verdict" style="color: var(--blue);">Recomenda&ccedil;&atilde;o interna: Op&ccedil;&atilde;o B (R$ 5.000 + R$ 497/m&ecirc;s)</p>
+  <p style="margin: 0;">Equil&iacute;brio entre margem saud&aacute;vel e acessibilidade para o Rodrigo. Com desconto &agrave; vista (R$ 4.500), continua vi&aacute;vel. A recorr&ecirc;ncia de R$ 497 cobre custos de IA + infra + 2h de suporte e ainda sobra margem. Se priorizarmos o case para a rede, a Op&ccedil;&atilde;o A tamb&eacute;m &eacute; v&aacute;lida &mdash; margem menor no curto prazo, mas potencial de 300+ unidades compensa.</p>
+</div>
+
+<!-- ============================================ -->
+<h2 id="cenarios"><span class="num">04</span>Cen&aacute;rios de margem</h2>
+
+<table>
+  <thead><tr><th>Cen&aacute;rio</th><th>Setup cobrado</th><th>Custo dev</th><th>Margem setup</th><th>Recorr&ecirc;ncia</th><th>Custo mensal</th><th>Margem mensal</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>A &mdash; Agressivo</td>
+      <td class="val">R$ 3.500</td>
+      <td class="val red">R$ 5.500-7.500</td>
+      <td class="val red">-R$ 2.000 a -R$ 4.000</td>
+      <td class="val">R$ 497</td>
+      <td class="val">R$ 250-600</td>
+      <td class="val green">+R$ 200/m&ecirc;s</td>
+    </tr>
+    <tr>
+      <td>B &mdash; Padr&atilde;o</td>
+      <td class="val">R$ 5.000</td>
+      <td class="val red">R$ 5.500-7.500</td>
+      <td class="val amber">-R$ 500 a -R$ 2.500</td>
+      <td class="val">R$ 497</td>
+      <td class="val">R$ 250-600</td>
+      <td class="val green">+R$ 200/m&ecirc;s</td>
+    </tr>
+    <tr>
+      <td>C &mdash; Premium</td>
+      <td class="val">R$ 7.000</td>
+      <td class="val red">R$ 5.500-7.500</td>
+      <td class="val green">+R$ 0 a +R$ 1.500</td>
+      <td class="val">R$ 697</td>
+      <td class="val">R$ 250-600</td>
+      <td class="val green">+R$ 400/m&ecirc;s</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="card amber">
+  <h3 style="margin-top: 0;">Nota sobre margem negativa no setup</h3>
+  <p style="margin: 0;">Nos cen&aacute;rios A e B, o setup n&atilde;o cobre 100% do custo de desenvolvimento. Isso &eacute; <strong>intencional se</strong> o objetivo for conquistar o case para a rede RHF. O payback vem de:<br>
+  (1) Recorr&ecirc;ncia mensal &mdash; break-even em 10-15 meses<br>
+  (2) Replica&ccedil;&atilde;o para rede &mdash; custo de dev pr&oacute;ximo de zero no segundo cliente em diante<br>
+  (3) Aprendizado &mdash; dom&iacute;nio do nicho de recrutamento que tem milhares de empresas no Brasil<br><br>
+  <strong>Se o objetivo for margem positiva j&aacute; no setup, ir com Op&ccedil;&atilde;o C ou reduzir escopo.</strong></p>
+</div>
+
+<h3>Proje&ccedil;&atilde;o de rede (se escalar)</h3>
+<div class="grid-3">
+  <div class="mini-card">
+    <div class="label">10 unidades</div>
+    <div class="value" style="color: var(--green);">R$ 4.970</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">recorr&ecirc;ncia/m&ecirc;s</div>
+  </div>
+  <div class="mini-card">
+    <div class="label">50 unidades</div>
+    <div class="value" style="color: var(--green);">R$ 24.850</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">recorr&ecirc;ncia/m&ecirc;s</div>
+  </div>
+  <div class="mini-card">
+    <div class="label">100 unidades</div>
+    <div class="value" style="color: var(--green);">R$ 49.700</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">recorr&ecirc;ncia/m&ecirc;s</div>
+  </div>
+</div>
+<p>Custo marginal por unidade adicional na rede: <strong>pr&oacute;ximo de R$ 50-100/m&ecirc;s</strong> (s&oacute; API de IA + infra incremental). Margem bruta na recorr&ecirc;ncia sobe para ~80-90% a partir da 5&ordf; unidade.</p>
+
+<!-- ============================================ -->
+<h2 id="riscos"><span class="num">05</span>Riscos e mitiga&ccedil;&otilde;es</h2>
+
+<table>
+  <thead><tr><th>Risco</th><th>Probabilidade</th><th>Impacto</th><th>Mitiga&ccedil;&atilde;o</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><em class="risk">API do Pandap&eacute; limitada ou mal documentada</em></td>
+      <td class="val amber">M&eacute;dia</td>
+      <td class="val red">Alto</td>
+      <td>Fazer discovery t&eacute;cnico ANTES de fechar proposta. Pedir acesso &agrave; documenta&ccedil;&atilde;o da API ao Rodrigo. Se a API n&atilde;o tiver endpoints necess&aacute;rios, avaliar scraping ou redu&ccedil;&atilde;o de escopo.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">ChatGuru n&atilde;o permite integra&ccedil;&atilde;o que precisamos</em></td>
+      <td class="val amber">M&eacute;dia-Baixa</td>
+      <td class="val amber">M&eacute;dio</td>
+      <td>ChatGuru tem API documentada e webhooks. Risco &eacute; menor. Validar se permite enviar PDF via API e ler hist&oacute;rico de conversa.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">Escopo cresce al&eacute;m do previsto (scope creep)</em></td>
+      <td class="val red">Alta</td>
+      <td class="val amber">M&eacute;dio</td>
+      <td>Rodrigo tem muitas ideias. Definir escopo fechado por fase. Quick Win = curr&iacute;culo autom&aacute;tico. S&oacute; avan&ccedil;a para pr&oacute;xima fase ap&oacute;s valida&ccedil;&atilde;o. Contrato com escopo expl&iacute;cito.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">Rodrigo n&atilde;o adota (resist&ecirc;ncia da equipe)</em></td>
+      <td class="val amber">M&eacute;dia</td>
+      <td class="val amber">M&eacute;dio</td>
+      <td>Ele j&aacute; usa ChatGPT e est&aacute; aberto a automa&ccedil;&atilde;o. Risco &eacute; mais na equipe de recrutadores. Incluir treinamento e 30 dias de acompanhamento.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">Franqueador escolhe outra solu&ccedil;&atilde;o</em></td>
+      <td class="val amber">M&eacute;dia</td>
+      <td class="val red">Alto (para expans&atilde;o)</td>
+      <td>N&atilde;o dependemos do franqueador para o piloto. Se escolherem outra solu&ccedil;&atilde;o de atendimento (n&atilde;o ChatGuru), nossa integra&ccedil;&atilde;o precisaria adaptar. Manter arquitetura modular.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">RecrutaFlow (concorrente interno) ganha tra&ccedil;&atilde;o</em></td>
+      <td class="val" style="color: var(--green);">Baixa</td>
+      <td class="val amber">M&eacute;dio</td>
+      <td>Rodrigo descartou &mdash; considerou arriscado investir em ferramenta de outro franqueado. Franqueador tamb&eacute;m n&atilde;o homologou. Mas monitorar.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">Qualidade da IA no resumo profissional</em></td>
+      <td class="val" style="color: var(--green);">Baixa</td>
+      <td class="val amber">M&eacute;dio</td>
+      <td>Rodrigo j&aacute; usa ChatGPT para isso e est&aacute; satisfeito com a qualidade. Nosso motor seria mais r&aacute;pido e automatizado, n&atilde;o precisa ser melhor que o GPT-4 &mdash; precisa ser igual e sem copia e cola.</td>
+    </tr>
+    <tr>
+      <td><em class="risk">Dados sens&iacute;veis (CPF, documentos)</em></td>
+      <td class="val amber">M&eacute;dia</td>
+      <td class="val red">Alto</td>
+      <td>Rodrigo j&aacute; tem prompts que filtram dados sens&iacute;veis. Implementar filtro autom&aacute;tico + revis&atilde;o humana obrigat&oacute;ria antes de enviar ao cliente. LGPD compliance.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="card red">
+  <h3 style="margin-top: 0;">Risco cr&iacute;tico: Discovery t&eacute;cnico n&atilde;o feito</h3>
+  <p style="margin: 0;">A proposta atual assume que as APIs do Pandap&eacute; e ChatGuru t&ecirc;m os endpoints necess&aacute;rios. <strong>Antes de fechar, precisamos de 2-4 horas de discovery t&eacute;cnico</strong> para validar: (1) Pandap&eacute; API permite ler candidatos e dados do funil, (2) ChatGuru API permite ler conversas e enviar arquivos, (3) Formato dos dados &eacute; compat&iacute;vel com o pipeline que planejamos. Se uma das APIs n&atilde;o atender, o escopo e o pre&ccedil;o mudam.</p>
+</div>
+
+<!-- ============================================ -->
+<h2 id="aberturas"><span class="num">06</span>Aberturas e oportunidades</h2>
+
+<h3>Oportunidade 1: Rede RHF (300+ unidades)</h3>
+<div class="card green">
+  <p style="margin: 0;">O maior ativo desse projeto n&atilde;o &eacute; o piloto em si &mdash; &eacute; o acesso &agrave; rede. Rodrigo &eacute; franqueado respeitado (9 anos), j&aacute; validou e apresentou solu&ccedil;&otilde;es para o franqueador antes. Se o piloto funcionar, ele leva para a rede. <strong>300 unidades &times; R$ 497/m&ecirc;s = R$ 149.100/m&ecirc;s de recorr&ecirc;ncia potencial.</strong> Mesmo com 10% de ades&atilde;o no primeiro ano, s&atilde;o R$ 14.910/m&ecirc;s.</p>
+</div>
+
+<h3>Oportunidade 2: Produto para nicho de recrutamento</h3>
+<p>A dor do Rodrigo n&atilde;o &eacute; exclusiva da RHF. Qualquer empresa de recrutamento que use ATS + WhatsApp tem o mesmo problema. O produto desenvolvido no piloto pode virar um SaaS vertical para o nicho de R&S.</p>
+<ul>
+  <li>Mercado: milhares de consultorias de RH no Brasil</li>
+  <li>Pandap&eacute; &eacute; l&iacute;der na Am&eacute;rica Latina &mdash; integra&ccedil;&atilde;o com eles &eacute; um diferencial</li>
+  <li>Poucos players conectam ATS + WhatsApp + IA de forma integrada</li>
+</ul>
+
+<h3>Oportunidade 3: Modelo de parceria com franqueador</h3>
+<p>Rodrigo mencionou que outro fornecedor (universidade corporativa) conseguiu se tornar recomendado pelo franqueador com um modelo de indica&ccedil;&atilde;o + comissionamento. Isso &eacute; replicável:</p>
+<ul>
+  <li>Franqueador indica &rarr; franqueado assina &rarr; franqueador recebe % ou fee fixo</li>
+  <li>Franqueador tem interesse: melhor performance da rede = mais royalties</li>
+  <li>Jantar com franqueador na pr&oacute;xima quinta (feira de franquias em Porto Alegre) &mdash; <em class="warn">timing &eacute; agora</em></li>
+</ul>
+
+<h3>Oportunidade 4: Expansão de escopo futuro</h3>
+<ul>
+  <li><strong>Triagem autom&aacute;tica com IA:</strong> Candidato se aplica &rarr; IA pontua perfil vs requisitos &rarr; pre-triagem autom&aacute;tica. Elimina trabalho manual de an&aacute;lise.</li>
+  <li><strong>Chatbot de atendimento inicial:</strong> Candidato entra pelo WhatsApp &rarr; chatbot faz perguntas de qualifica&ccedil;&atilde;o &rarr; s&oacute; passa para recrutador quem estiver qualificado.</li>
+  <li><strong>Portal do cliente:</strong> Empregador acompanha status das vagas em tempo real (em vez de perguntar no WhatsApp).</li>
+  <li><strong>Relat&oacute;rio autom&aacute;tico para franqueador:</strong> M&eacute;tricas agregadas da rede &mdash; um produto premium que o franqueador pagaria diretamente.</li>
+</ul>
+
+<h3>Oportunidade 5: ChatGuru como parceiro</h3>
+<p>O ChatGuru est&aacute; tentando ser o sistema de atendimento recomendado da rede RHF. Se n&oacute;s somos os que adicionam a camada de IA por cima do ChatGuru, isso vira um pacote: ChatGuru (atendimento) + u4digital (IA). Possibilidade de co-selling ou parceria comercial com o ChatGuru.</p>
+
+<!-- ============================================ -->
+<h2 id="decisoes"><span class="num">07</span>Decis&otilde;es pendentes</h2>
+
+<table>
+  <thead><tr><th>#</th><th>Decis&atilde;o</th><th>Respons&aacute;vel</th><th>Prazo sugerido</th></tr></thead>
+  <tbody>
+    <tr><td class="val blue">1</td><td><strong>Fazer discovery t&eacute;cnico das APIs</strong> (Pandap&eacute; + ChatGuru) antes de enviar proposta final</td><td>Moroni</td><td>Antes do pr&oacute;ximo contato</td></tr>
+    <tr><td class="val blue">2</td><td><strong>Definir op&ccedil;&atilde;o de pricing</strong> (A, B, C ou D) &mdash; qual estrat&eacute;gia queremos?</td><td>Equipe</td><td>Antes do pr&oacute;ximo contato</td></tr>
+    <tr><td class="val blue">3</td><td><strong>Definir escopo do Quick Win</strong> &mdash; s&oacute; curr&iacute;culo ou curr&iacute;culo + sync?</td><td>Equipe</td><td>Junto com pricing</td></tr>
+    <tr><td class="val blue">4</td><td><strong>Proposta por fases?</strong> Cobrar setup por fase (menor barreira) ou tudo junto?</td><td>Tiago + Moroni</td><td>Junto com pricing</td></tr>
+    <tr><td class="val blue">5</td><td><strong>Contrato de recorr&ecirc;ncia:</strong> m&iacute;nimo de 6 meses? 12 meses? Sem fidelidade?</td><td>Tiago</td><td>Antes de enviar proposta</td></tr>
+    <tr><td class="val blue">6</td><td><strong>Jantar com franqueador</strong> (pr&oacute;xima quinta): vamos? Se sim, preparar o qu&ecirc;?</td><td>Tiago + Rodrigo</td><td>At&eacute; quarta-feira</td></tr>
+    <tr><td class="val blue">7</td><td><strong>Grupo WhatsApp</strong> com Rodrigo j&aacute; foi criado?</td><td>Tiago</td><td>Imediato</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<div class="card blue">
+  <h3 style="margin-top: 0;">Veredicto geral</h3>
+  <p>Projeto de <em class="blue">alto potencial estrat&eacute;gico</em> e <em class="warn">margem apertada no curto prazo</em>. O valor real est&aacute; na porta que abre para 300+ unidades, n&atilde;o no piloto em si. Recomenda&ccedil;&atilde;o: fechar com pre&ccedil;o agressivo-a-padr&atilde;o (Op&ccedil;&atilde;o A ou B), executar r&aacute;pido (Quick Win em 3 semanas), documentar resultados, e usar o case para abrir a rede.</p>
+  <p style="margin: 0;"><strong>Pr&oacute;ximo passo concreto:</strong> Discovery t&eacute;cnico das APIs (2-4h) &rarr; decis&atilde;o de pricing &rarr; enviar proposta final &rarr; criar grupo WhatsApp &rarr; iniciar.</p>
+</div>
+
+</div>
+</body>
+</html>

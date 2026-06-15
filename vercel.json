@@ -1,0 +1,17 @@
+{
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/proposta", "destination": "/index.html" },
+    { "source": "/mvp", "destination": "/mvp.html" },
+    { "source": "/interno", "destination": "/interno.html" },
+    { "source": "/kickoff", "destination": "/kickoff.html" },
+    { "source": "/status", "destination": "/status.html" },
+    { "source": "/relatorio", "destination": "/relatorio.html" },
+    { "source": "/chat", "destination": "/chat.html" },
+    { "source": "/api/webhook/pandape", "destination": "/api/webhook/pandape.js" },
+    { "source": "/api/pandape/matches", "destination": "/api/pandape/matches.js" },
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/", "destination": "/login.html" },
+    { "source": "/((?!api/).*)", "destination": "/login.html" }
+  ]
+}
