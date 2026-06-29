@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RHF Talentos | Gestão de Usuários</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAFA; --bg-white: #FFFFFF; --bg-light: #F3F4F6;
+    --bg-sidebar: #1E1E2D; --bg-sidebar-hover: #2A2A3C; --bg-sidebar-active: #32324A;
+    --border: #E5E7EB; --text: #1F2937; --text-sec: #6B7280; --text-muted: #9CA3AF;
+    --text-sidebar: #A0A3B1; --text-sidebar-active: #FFFFFF;
+    --orange: #FF6B35; --orange-hover: #E85A26; --orange-light: #FFF0EB;
+    --green: #10B981; --green-light: #ECFDF5; --green-dark: #059669;
+    --blue: #3B82F6; --blue-light: #EFF6FF;
+    --red: #EF4444; --red-light: #FEF2F2;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: 260px; background: var(--bg-sidebar); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-brand { padding: 24px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; }
+  .sidebar-brand .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+  .sidebar-brand .logo-text { font-size: 15px; font-weight: 700; color: #fff; }
+  .sidebar-brand .logo-sub { font-size: 11px; color: var(--text-sidebar); }
+  .sidebar-nav { padding: 16px 12px; flex: 1; }
+  .sidebar-section { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.25); letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 12px 8px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: var(--text-sidebar); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; text-decoration: none; }
+  .nav-item:hover { background: var(--bg-sidebar-hover); color: #fff; }
+  .nav-item.active { background: var(--bg-sidebar-active); color: var(--text-sidebar-active); }
+  .nav-item .nav-icon { width: 20px; height: 20px; opacity: 0.6; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; }
+  .sidebar-footer .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), #FF8F66); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+  .sidebar-footer .user-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .sidebar-footer .user-role { font-size: 11px; color: var(--text-sidebar); }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: auto; }
+  .page-header { padding: 28px 32px 0; }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .page-sub { font-size: 14px; color: var(--text-sec); margin-top: 4px; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; gap: 12px; padding: 20px 32px; }
+  .btn { padding: 9px 18px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; display: flex; align-items: center; gap: 7px; }
+  .btn-primary { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: var(--orange-hover); }
+  .btn-outline { background: var(--bg-white); color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg-light); }
+
+  /* TABLE */
+  .table-wrap { margin: 0 32px; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--bg-light); }
+  thead th { padding: 12px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-light); }
+  tbody td { padding: 14px 20px; font-size: 14px; color: var(--text); }
+  .role-badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .role-admin { background: #EDE9FE; color: #7C3AED; }
+  .role-recrutador { background: var(--blue-light); color: var(--blue); }
+  .action-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: var(--text-sec); transition: all 0.15s; }
+  .action-btn:hover { background: var(--bg-light); color: var(--text); }
+  .action-btn.delete:hover { background: var(--red-light); color: var(--red); }
+  .empty-state { padding: 48px; text-align: center; color: var(--text-muted); }
+
+  /* LOG SECTION */
+  .section-title { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; margin: 28px 32px 12px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 520px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .form-field { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-input, .form-select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; outline: none; background: var(--bg-light); transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus { border-color: var(--orange); background: #fff; }
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .error-banner { background: var(--red-light); border: 1px solid #FECACA; color: var(--red); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; display: none; }
+  .error-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- AUTH GUARD — admin only -->
+<script>
+(function(){
+  document.documentElement.style.visibility='hidden';
+  var t=localStorage.getItem('rhf_token');
+  if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
+  fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+    .then(function(r){return r.ok?r.json():Promise.reject();})
+    .then(function(d){
+      document.documentElement.style.visibility='';
+      var stored=localStorage.getItem('rhf_user');
+      var profile=stored?JSON.parse(stored):{};
+      if(d&&d.profile)Object.assign(profile,d.profile);
+      if(d&&d.user)Object.assign(profile,{id:d.user.id,email:d.user.email});
+      window.RHF_USER=profile;
+      if(profile.role!=='admin'){window.location.replace('/mvp');return;}
+      var name=profile.full_name||profile.email||'Admin';
+      var el=document.getElementById('sidebar-user-name');if(el)el.textContent=name;
+      var av=document.getElementById('sidebar-avatar');if(av)av.textContent=(name[0]||'A').toUpperCase();
+    })
+    .catch(function(){localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');});
+})();
+</script>
+
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon">R</div>
+    <div>
+      <div class="logo-text">RHF Talentos</div>
+      <div class="logo-sub">Plataforma IA</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">Principal</div>
+    <a class="nav-item" href="/mvp">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="/chat">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Conversas
+    </a>
+    <a class="nav-item active" href="/admin">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Usuários
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar" id="sidebar-avatar">A</div>
+    <div>
+      <div class="user-name" id="sidebar-user-name">Admin</div>
+      <div class="user-role">Administrador</div>
+    </div>
+    <button onclick="(function(){localStorage.removeItem('rhf_token');window.location.replace('/login');})()" title="Sair" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:rgba(255,255,255,0.35);transition:color 0.15s;" onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Gestão de Usuários</div>
+    <div class="page-sub">Crie e gerencie contas de acesso à plataforma.</div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Novo Usuário
+    </button>
+    <button class="btn btn-outline" onclick="loadUsers()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Atualizar
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Email</th>
+          <th>Perfil</th>
+          <th>Agent ChatGuru</th>
+          <th>Criado em</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody">
+        <tr><td colspan="6" class="empty-state">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- AI Suggestion Log (admin) -->
+  <div class="section-title">Histórico de Sugestões IA Copiadas</div>
+  <div class="table-wrap" style="margin-bottom:32px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Recrutador</th>
+          <th>Candidato</th>
+          <th>Telefone</th>
+          <th>Sugestão</th>
+          <th>Data</th>
+        </tr>
+      </thead>
+      <tbody id="log-tbody">
+        <tr><td colspan="5" class="empty-state">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-title">Novo Usuário</div>
+    <div class="error-banner" id="modal-error"></div>
+    <div class="form-field">
+      <label class="form-label">Nome completo</label>
+      <input class="form-input" id="f-name" type="text" placeholder="Nome Sobrenome">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="f-email" type="email" placeholder="nome@rhf.com.br">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Senha temporária</label>
+      <input class="form-input" id="f-password" type="text" placeholder="Mínimo 8 caracteres">
+      <div class="form-hint">O usuário poderá alterar após o primeiro acesso.</div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Perfil</label>
+      <select class="form-select" id="f-role">
+        <option value="recrutador">Recrutador</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">ID do Agente no ChatGuru <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+      <input class="form-input" id="f-agent" type="text" placeholder="Ex: 12345">
+      <div class="form-hint">Filtra as conversas do ChatGuru atribuídas a este recrutador.</div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">ID do Gestor no Pandapé <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+      <input class="form-input" id="f-manager" type="text" placeholder="Ex: user_abc">
+      <div class="form-hint">Filtra as vagas onde este recrutador é gestor do processo.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" style="flex:2" id="modal-save-btn" onclick="createUser()">Criar Usuário</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== USERS =====
+  async function loadUsers() {
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Carregando...</td></tr>';
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=list-users', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + t },
+      });
+      const data = await res.json();
+      const users = data.users || [];
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum usuário cadastrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td style="font-weight:600">${esc(u.full_name || '—')}</td>
+          <td style="color:var(--text-sec)">${esc(u.email || '—')}</td>
+          <td><span class="role-badge ${u.role === 'admin' ? 'role-admin' : 'role-recrutador'}">${u.role === 'admin' ? 'Admin' : 'Recrutador'}</span></td>
+          <td style="color:var(--text-muted);font-size:13px">${esc(u.chatguru_agent_id || '—')}</td>
+          <td style="color:var(--text-muted);font-size:13px">${u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+          <td style="text-align:right">
+            <button class="action-btn delete" title="Desativar" onclick="disableUser('${u.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:var(--red)">Erro: ${err.message}</td></tr>`;
+    }
+  }
+
+  async function disableUser(userId) {
+    if (!confirm('Desativar este usuário? O acesso será revogado.')) return;
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=disable-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const data = await res.json();
+      if (res.ok) { loadUsers(); } else { alert(data.error || 'Erro ao desativar.'); }
+    } catch (err) { alert(err.message); }
+  }
+
+  // ===== CREATE USER MODAL =====
+  function openModal() { document.getElementById('userModal').classList.add('open'); }
+  function closeModal() {
+    document.getElementById('userModal').classList.remove('open');
+    ['f-name','f-email','f-password','f-agent','f-manager'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-role').value = 'recrutador';
+    showModalError('');
+  }
+  function showModalError(msg) {
+    const el = document.getElementById('modal-error');
+    el.textContent = msg;
+    el.classList.toggle('show', !!msg);
+  }
+
+  async function createUser() {
+    const name = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const password = document.getElementById('f-password').value.trim();
+    const role = document.getElementById('f-role').value;
+    const agentId = document.getElementById('f-agent').value.trim();
+    const managerId = document.getElementById('f-manager').value.trim();
+
+    if (!email || !password) { showModalError('Email e senha são obrigatórios.'); return; }
+    if (password.length < 8) { showModalError('A senha deve ter pelo menos 8 caracteres.'); return; }
+
+    const btn = document.getElementById('modal-save-btn');
+    btn.disabled = true; btn.textContent = 'Criando...';
+    showModalError('');
+
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=create-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+        body: JSON.stringify({ email, password, role, full_name: name || null,
+          chatguru_agent_id: agentId || null, pandape_manager_id: managerId || null }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        closeModal();
+        loadUsers();
+      } else {
+        showModalError(data.error || 'Erro ao criar usuário.');
+      }
+    } catch (err) {
+      showModalError(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Criar Usuário';
+    }
+  }
+
+  // ===== AI LOG =====
+  async function loadLog() {
+    const tbody = document.getElementById('log-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Carregando...</td></tr>';
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/ai-log', { headers: { 'Authorization': 'Bearer ' + t } });
+      const data = await res.json();
+      const logs = data.data || data.logs || [];
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhuma sugestão copiada ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td style="font-weight:600">${esc(l.user_name || '—')}</td>
+          <td>${esc(l.candidate_name || '—')}</td>
+          <td style="color:var(--text-muted);font-size:13px">${esc(l.phone || '—')}</td>
+          <td style="max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px">${esc(l.suggestion_text)}</td>
+          <td style="color:var(--text-muted);font-size:13px">${new Date(l.copied_at).toLocaleString('pt-BR')}</td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:var(--red)">Erro: ${err.message}</td></tr>`;
+    }
+  }
+
+  function esc(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('userModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Init
+  loadUsers();
+  loadLog();
+</script>
+</body>
+</html>

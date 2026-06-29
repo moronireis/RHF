@@ -496,11 +496,30 @@
   var t=localStorage.getItem('rhf_token');
   if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
   fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
-    .then(function(r){
-      if(r.ok){document.documentElement.style.visibility='';}
-      else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
+    .then(function(r){return r.ok?r.json():Promise.reject();})
+    .then(function(data){
+      var u=Object.assign({},data.user||{},data.profile||{});
+      if(!u.role)u.role='recrutador';
+      window.RHF_USER=u;
+      // Update localStorage with fresh profile
+      try{localStorage.setItem('rhf_user',JSON.stringify(u));}catch(_){}
+      // Apply to sidebar
+      var fn=u.full_name||u.email||'Usuário';
+      var role=u.role==='admin'?'Administrador':'Recrutador';
+      var initials=fn.split(' ').map(function(p){return p[0];}).join('').slice(0,2).toUpperCase();
+      var avEl=document.getElementById('sidebar-avatar');
+      var nameEl=document.getElementById('sidebar-user-name');
+      var roleEl=document.getElementById('sidebar-user-role');
+      if(avEl)avEl.textContent=initials;
+      if(nameEl)nameEl.textContent=fn;
+      if(roleEl)roleEl.textContent=role;
+      // Show admin-only nav items
+      if(u.role==='admin'){
+        document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';});
+      }
+      document.documentElement.style.visibility='';
     })
-    .catch(function(){localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');});
+    .catch(function(){localStorage.removeItem('rhf_token');localStorage.removeItem('rhf_user');document.documentElement.style.visibility='';window.location.replace('/login');});
 })();
 </script>
 
@@ -531,6 +550,10 @@
     </a>
 
     <div class="sidebar-section">Integrações</div>
+    <a class="nav-item admin-only" href="/admin" style="display:none;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Usuários
+    </a>
     <a class="nav-item" onclick="showTab('sync')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Sync Status
@@ -547,12 +570,12 @@
   </nav>
 
   <div class="sidebar-footer">
-    <div class="avatar">RS</div>
+    <div class="avatar" id="sidebar-avatar">?</div>
     <div class="user-info">
-      <div class="user-name">Rodrigo Silva</div>
-      <div class="user-role">RHF Vale dos Sinos</div>
+      <div class="user-name" id="sidebar-user-name">Carregando...</div>
+      <div class="user-role" id="sidebar-user-role">—</div>
     </div>
-    <button onclick="(function(){localStorage.removeItem('rhf_token');window.location.replace('/login');})()" title="Sair" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:rgba(255,255,255,0.35);transition:color 0.15s,background 0.15s;flex-shrink:0;" onmouseover="this.style.color='#EF4444';this.style.background='rgba(239,68,68,0.12)'" onmouseout="this.style.color='rgba(255,255,255,0.35)';this.style.background='none'">
+    <button onclick="(function(){localStorage.removeItem('rhf_token');localStorage.removeItem('rhf_user');window.location.replace('/login');})()" title="Sair" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:rgba(255,255,255,0.35);transition:color 0.15s,background 0.15s;flex-shrink:0;" onmouseover="this.style.color='#EF4444';this.style.background='rgba(239,68,68,0.12)'" onmouseout="this.style.color='rgba(255,255,255,0.35)';this.style.background='none'">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </button>
   </div>
@@ -2182,6 +2205,8 @@
 
       if (json.status === 'ok' && json.cv) {
         window._lastGeneratedForCandidate = selectedCandidateId;
+        window._currentCVId = json.cv.id || null;
+        window._currentCVPhone = json.cv.candidate_phone || null;
         renderGeneratedCV(json.cv);
         result.style.display = 'block';
 
@@ -2247,20 +2272,168 @@
 
         ${cv.model_used ? `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">Gerado com ${cv.model_used} · ${cv.prompt_tokens || 0} tokens entrada · ${cv.completion_tokens || 0} tokens saída</div>` : ''}
       </div>
-      <div class="cv-actions">
-        <button class="cv-btn primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-          Enviar ao Cliente
+      <div class="cv-actions" style="flex-wrap:wrap;gap:8px;">
+        <button class="cv-btn secondary" onclick="editCV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
         </button>
-        <button class="cv-btn secondary" onclick="printCV()">
+        <button class="cv-btn secondary" onclick="savePDF()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Imprimir / PDF
+          Salvar PDF
+        </button>
+        <button class="cv-btn primary" onclick="openEmailModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Enviar por Email
+        </button>
+        <button class="cv-btn secondary" onclick="uploadToChatguru()" title="Salvar PDF na aba Arquivos do ChatGuru">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Enviar ao ChatGuru
         </button>
       </div>`;
   }
 
-  function printCV() {
-    window.print();
+  // ============================================================
+  // CV ACTIONS — Edit, PDF, Email, ChatGuru upload
+  // ============================================================
+
+  let _cvEditMode = false;
+
+  function editCV() {
+    const preview = document.querySelector('.cv-preview');
+    if (!preview) return;
+    _cvEditMode = !_cvEditMode;
+
+    if (_cvEditMode) {
+      preview.querySelectorAll('.cv-section-text').forEach(el => {
+        const ta = document.createElement('textarea');
+        ta.value = el.innerText;
+        ta.style.cssText = 'width:100%;min-height:80px;font-family:inherit;font-size:13px;border:1.5px solid var(--orange);border-radius:6px;padding:8px;resize:vertical;line-height:1.6;';
+        ta.dataset.cvField = 'true';
+        el.replaceWith(ta);
+      });
+      document.querySelector('[onclick="editCV()"]').textContent = 'Salvar edições';
+    } else {
+      preview.querySelectorAll('textarea[data-cv-field]').forEach(ta => {
+        const div = document.createElement('div');
+        div.className = 'cv-section-text';
+        div.innerHTML = ta.value.replace(/\n/g, '<br>');
+        ta.replaceWith(div);
+      });
+      document.querySelector('[onclick="editCV()"]').textContent = 'Editar';
+    }
+  }
+
+  function savePDF() {
+    const preview = document.querySelector('.cv-preview');
+    if (!preview) { alert('Gere o currículo antes de salvar.'); return; }
+
+    const candidateName = (preview.querySelector('.cv-preview-name')?.textContent || 'curriculo')
+      .replace(/\s+/g, '-').toLowerCase();
+
+    if (typeof html2pdf === 'undefined') {
+      // html2pdf.js not yet loaded — load it on demand
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => doSavePDF(preview, candidateName);
+      document.head.appendChild(script);
+    } else {
+      doSavePDF(preview, candidateName);
+    }
+  }
+
+  function doSavePDF(preview, candidateName) {
+    const btn = document.querySelector('[onclick="savePDF()"]');
+    if (btn) btn.textContent = 'Gerando PDF...';
+    const opt = {
+      margin: [10, 15],
+      filename: `curriculo-${candidateName}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    };
+    html2pdf().set(opt).from(preview).save().then(() => {
+      if (btn) btn.textContent = 'Salvar PDF';
+    });
+  }
+
+  function openEmailModal() {
+    document.getElementById('emailModal').style.display = 'flex';
+    document.getElementById('emailTo').focus();
+  }
+
+  function closeEmailModal() {
+    document.getElementById('emailModal').style.display = 'none';
+  }
+
+  async function sendCVEmail() {
+    const to = document.getElementById('emailTo').value.trim();
+    const cc = document.getElementById('emailCc').value.trim();
+    if (!to) { alert('Informe o email do destinatário.'); return; }
+    if (!window._currentCVId) { alert('Currículo não salvo. Gere novamente.'); return; }
+
+    const btn = document.getElementById('emailSendBtn');
+    btn.textContent = 'Enviando...'; btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/cv?action=send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cv_id: window._currentCVId, to, cc: cc || undefined }),
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        closeEmailModal();
+        alert('Email enviado com sucesso!');
+      } else {
+        alert('Erro: ' + (data.message || 'Falha no envio.'));
+      }
+    } catch (e) {
+      alert('Erro de conexão: ' + e.message);
+    } finally {
+      btn.textContent = 'Enviar'; btn.disabled = false;
+    }
+  }
+
+  async function uploadToChatguru() {
+    const preview = document.querySelector('.cv-preview');
+    if (!preview) { alert('Gere o currículo antes de enviar.'); return; }
+    if (!window._currentCVId) { alert('Currículo não salvo. Gere novamente.'); return; }
+
+    const phone = window._currentCVPhone;
+    if (!phone) { alert('Candidato sem telefone cadastrado — não é possível enviar ao ChatGuru.'); return; }
+
+    const btn = document.querySelector('[onclick="uploadToChatguru()"]');
+    if (btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
+
+    const doUpload = (base64) => {
+      fetch('/api/cv?action=upload-chatguru', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cv_id: window._currentCVId, phone, file_base64: base64 }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'ok') alert('Currículo salvo no ChatGuru com sucesso!');
+          else alert('Erro no ChatGuru: ' + (data.message || JSON.stringify(data)));
+        })
+        .catch(e => alert('Erro: ' + e.message))
+        .finally(() => { if (btn) { btn.textContent = 'Enviar ao ChatGuru'; btn.disabled = false; } });
+    };
+
+    if (typeof html2pdf === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => {
+        html2pdf().from(preview).outputPdf('datauristring').then(uri => {
+          doUpload(uri.split(',')[1]);
+        });
+      };
+      document.head.appendChild(script);
+    } else {
+      html2pdf().from(preview).outputPdf('datauristring').then(uri => {
+        doUpload(uri.split(',')[1]);
+      });
+    }
   }
 
   // ============================================================
@@ -2285,6 +2458,33 @@
   // ============================================================
   showTab('dashboard');
 </script>
+
+<!-- ── Email Modal ─────────────────────────────────────────────── -->
+<div id="emailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.3);margin:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h3 style="font-size:18px;font-weight:700;color:#111827;">Enviar Currículo por Email</h3>
+      <button onclick="closeEmailModal()" style="background:none;border:none;cursor:pointer;color:#6B7280;padding:4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Para (destinatário)</label>
+      <input id="emailTo" type="email" placeholder="email@empresa.com" style="width:100%;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#FF6B35'" onblur="this.style.borderColor='#E5E7EB'">
+    </div>
+    <div style="margin-bottom:24px;">
+      <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">CC (opcional)</label>
+      <input id="emailCc" type="email" placeholder="copia@empresa.com" style="width:100%;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#FF6B35'" onblur="this.style.borderColor='#E5E7EB'">
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button onclick="closeEmailModal()" style="flex:1;padding:12px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>
+      <button id="emailSendBtn" onclick="sendCVEmail()" style="flex:2;padding:12px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+        Enviar
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -315,8 +315,10 @@
           return;
         }
 
-        // Persist token and redirect
+        // Persist token, profile and redirect
         localStorage.setItem('rhf_token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('rhf_refresh', data.refresh_token);
+        if (data.profile) localStorage.setItem('rhf_user', JSON.stringify({ ...data.user, ...data.profile }));
         window.location.replace('/mvp');
 
       } catch (err) {

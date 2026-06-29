@@ -303,9 +303,20 @@
   var t=localStorage.getItem('rhf_token');
   if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
   fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
-    .then(function(r){
-      if(r.ok){document.documentElement.style.visibility='';}
-      else{localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');}
+    .then(function(r){return r.ok?r.json():Promise.reject();})
+    .then(function(d){
+      document.documentElement.style.visibility='';
+      var stored=localStorage.getItem('rhf_user');
+      var profile=stored?JSON.parse(stored):{};
+      if(d&&d.profile)Object.assign(profile,d.profile);
+      if(d&&d.user)Object.assign(profile,{id:d.user.id,email:d.user.email});
+      window.RHF_USER=profile;
+      var name=profile.full_name||profile.email||'Usuário';
+      var role=profile.role==='admin'?'Administrador':'Recrutador';
+      var el=document.getElementById('sidebar-user-name');if(el)el.textContent=name;
+      var er=document.getElementById('sidebar-user-role');if(er)er.textContent=role;
+      var av=document.getElementById('sidebar-avatar');if(av)av.textContent=(name[0]||'U').toUpperCase();
+      document.querySelectorAll('.admin-only').forEach(function(e){e.style.display=profile.role==='admin'?'':'none';});
     })
     .catch(function(){localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');});
 })();
@@ -361,13 +372,17 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Conversas
       </a>
+      <a class="nav-item admin-only" href="/admin" style="display:none;">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Usuários
+      </a>
     </nav>
 
     <div class="sidebar-footer">
-      <div class="avatar">A</div>
+      <div class="avatar" id="sidebar-avatar">U</div>
       <div class="user-info">
-        <div class="user-name">Admin RHF</div>
-        <div class="user-role">Gestora de Talentos</div>
+        <div class="user-name" id="sidebar-user-name">Carregando...</div>
+        <div class="user-role" id="sidebar-user-role">RHF Talentos</div>
       </div>
       <button onclick="(function(){localStorage.removeItem('rhf_token');window.location.replace('/login');})()" title="Sair" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:rgba(255,255,255,0.35);transition:color 0.15s,background 0.15s;flex-shrink:0;" onmouseover="this.style.color='#EF4444';this.style.background='rgba(239,68,68,0.12)'" onmouseout="this.style.color='rgba(255,255,255,0.35)';this.style.background='none'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -419,10 +434,14 @@
             <div class="chat-header-info">
               <div class="chat-header-name" id="chat-header-name">—</div>
               <div class="chat-header-phone" id="chat-header-phone">—</div>
+              <div id="chat-header-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;"></div>
             </div>
-            <div class="chat-header-badge">
-              <span class="chat-header-badge-dot"></span>
-              WhatsApp
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+              <div class="chat-header-badge">
+                <span class="chat-header-badge-dot"></span>
+                WhatsApp
+              </div>
+              <div id="chat-header-status" style="display:none;font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;background:var(--blue-light);color:var(--blue);"></div>
             </div>
           </div>
 
@@ -430,6 +449,20 @@
             <div class="messages-loading" id="messages-loading">
               <div class="mini-spinner"></div>
               <span>Carregando mensagens...</span>
+            </div>
+          </div>
+
+          <!-- AI Suggestion panel (hidden by default) -->
+          <div id="ai-suggestion-panel" style="display:none;padding:12px 16px;background:#EFF6FF;border-top:1px solid #BFDBFE;">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="flex:1;">
+                <div style="font-size:11px;font-weight:600;color:#3B82F6;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Sugestão da IA</div>
+                <div id="ai-suggestion-text" style="font-size:13px;color:#1F2937;line-height:1.55;white-space:pre-wrap;"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+                <button id="ai-copy-btn" onclick="copyAISuggestion()" style="padding:7px 14px;background:#3B82F6;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Copiar</button>
+                <button onclick="closeAISuggestion()" style="padding:7px 14px;background:transparent;color:#6B7280;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;cursor:pointer;">Fechar</button>
+              </div>
             </div>
           </div>
 
@@ -442,7 +475,7 @@
               onkeydown="handleInputKey(event)"
               oninput="autoResize(this)"
             ></textarea>
-            <button class="ai-btn" title="Em breve" disabled>
+            <button class="ai-btn" id="ai-suggest-btn" onclick="requestAISuggestion()" style="cursor:pointer;opacity:1;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.071 4.929l-1.414 1.414M4.929 4.929l1.414 1.414M4.929 19.071l1.414-1.414M19.071 19.071l-1.414-1.414M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
               Sugerir IA
             </button>
@@ -539,7 +572,10 @@
     }
 
     try {
-      const res = await fetch('/api/whatsapp?action=chats');
+      const user = window.RHF_USER || {};
+      const agentId = user.role !== 'admin' && user.chatguru_agent_id ? user.chatguru_agent_id : null;
+      const url = '/api/whatsapp?action=chats' + (agentId ? '&agent_id=' + encodeURIComponent(agentId) : '');
+      const res = await fetch(url);
       const data = await res.json();
 
       if (!data.data || data.data.length === 0) {
@@ -607,13 +643,18 @@
     activePhone = phone;
     activeName = name;
 
-    // Update header
+    // Update header basics
     const color = avatarColor(phone);
     const ini = initials(name);
     document.getElementById('chat-header-avatar').className = `chat-header-avatar ${color}`;
     document.getElementById('chat-header-avatar').textContent = ini;
     document.getElementById('chat-header-name').textContent = name;
     document.getElementById('chat-header-phone').textContent = phone;
+    // Reset dynamic fields
+    document.getElementById('chat-header-tags').innerHTML = '';
+    const statusEl = document.getElementById('chat-header-status');
+    statusEl.style.display = 'none';
+    statusEl.textContent = '';
 
     // Show active chat, hide empty state
     document.getElementById('chat-empty').style.display = 'none';
@@ -627,17 +668,48 @@
     document.getElementById('chat-input').disabled = false;
     document.getElementById('send-btn').disabled = false;
 
+    // Close any open suggestion panel
+    closeAISuggestion();
+
     // Re-render contacts to show active state
     renderContacts(allChats);
 
     // Load messages
     loadMessages(phone, false);
 
+    // Load ChatGuru custom fields
+    loadChatDetails(phone);
+
     // Start polling messages for this chat
     clearInterval(messagesRefreshInterval);
     messagesRefreshInterval = setInterval(() => {
       if (activePhone) loadMessages(activePhone, true);
     }, 5000);
+  }
+
+  async function loadChatDetails(phone) {
+    try {
+      const res = await fetch(`/api/whatsapp?action=chat-details&phone=${encodeURIComponent(phone)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const chat = data.data || {};
+
+      // Status badge
+      const statusEl = document.getElementById('chat-header-status');
+      if (chat.status) {
+        statusEl.textContent = chat.status;
+        statusEl.style.display = 'block';
+      }
+
+      // Tags + processo
+      const tagsEl = document.getElementById('chat-header-tags');
+      const tags = [];
+      if (chat.processo) tags.push({ label: chat.processo, color: '#FF6B35', bg: '#FFF0EB' });
+      if (Array.isArray(chat.tags)) chat.tags.forEach(t => tags.push({ label: t, color: '#6B7280', bg: '#F3F4F6' }));
+      tagsEl.innerHTML = tags.map(t =>
+        `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;background:${t.bg};color:${t.color};">${t.label}</span>`
+      ).join('');
+    } catch (_) {}
   }
 
   // ===== LOAD MESSAGES =====
@@ -650,7 +722,7 @@
     }
 
     try {
-      const res = await fetch(`/api/whatsapp?action=messages?phone=${encodeURIComponent(phone)}&limit=50`);
+      const res = await fetch(`/api/whatsapp?action=messages&phone=${encodeURIComponent(phone)}&limit=50`);
       const data = await res.json();
 
       if (!data.data || data.data.length === 0) {
@@ -757,6 +829,81 @@
       e.preventDefault();
       sendMessage();
     }
+  }
+
+  // ===== AI SUGGESTION =====
+  async function requestAISuggestion() {
+    if (!activePhone) return;
+    const btn = document.getElementById('ai-suggest-btn');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    const panel = document.getElementById('ai-suggestion-panel');
+    const textEl = document.getElementById('ai-suggestion-text');
+    panel.style.display = 'block';
+    textEl.textContent = 'Gerando sugestão...';
+
+    try {
+      const res = await fetch('/api/whatsapp?action=suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: activePhone, candidate_name: activeName }),
+      });
+      const data = await res.json();
+      if (data.status === 'ok' && data.suggestion) {
+        textEl.textContent = data.suggestion;
+        document.getElementById('ai-copy-btn').dataset.text = data.suggestion;
+      } else {
+        textEl.textContent = 'Não foi possível gerar sugestão.';
+      }
+    } catch (err) {
+      textEl.textContent = 'Erro ao chamar IA.';
+    } finally {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  function closeAISuggestion() {
+    document.getElementById('ai-suggestion-panel').style.display = 'none';
+  }
+
+  async function copyAISuggestion() {
+    const btn = document.getElementById('ai-copy-btn');
+    const text = btn.dataset.text || document.getElementById('ai-suggestion-text').textContent;
+    if (!text || text === 'Gerando sugestão...' || text === 'Não foi possível gerar sugestão.' || text === 'Erro ao chamar IA.') return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (_) {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    // Visual feedback
+    btn.textContent = 'Copiado!';
+    btn.style.background = '#10B981';
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.style.background = '#3B82F6'; }, 2000);
+
+    // Log the copy action
+    const user = window.RHF_USER || {};
+    try {
+      await fetch('/api/ai-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: activePhone,
+          candidate_name: activeName,
+          suggestion_text: text,
+          user_id: user.id || null,
+          user_name: user.full_name || user.email || null,
+        }),
+      });
+    } catch (_) {}
   }
 
   // ===== INIT =====
