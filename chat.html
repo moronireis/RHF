@@ -220,6 +220,10 @@
     background: var(--orange); color: #fff;
     align-self: flex-end; border-bottom-right-radius: 4px;
   }
+  .msg-bubble img { display: block; border-radius: 8px; max-width: 240px; max-height: 200px; cursor: pointer; }
+  .msg-bubble audio { max-width: 240px; width: 100%; accent-color: var(--orange); }
+  .msg-bubble video { display: block; border-radius: 8px; max-width: 240px; max-height: 200px; }
+  .msg-bubble.sent audio { accent-color: #fff; }
   .msg-time {
     font-size: 10px; margin-top: 4px; opacity: 0.6;
     display: block;
@@ -740,6 +744,84 @@
     }
   }
 
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+  }
+
+  function escapeAttr(str) {
+    return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ── Media bubble content ─────────────────────────────────────────────────
+  function renderMediaContent(msg) {
+    const type = msg.contentType || msg.type || 'text';
+    const url  = msg.mediaUrl || null;
+    const body = msg.body || '';
+
+    // IMAGE
+    if (type === 'image') {
+      if (!url) return `<span style="color:var(--text-muted);font-size:12px;">[Imagem não disponível]</span>`;
+      return `
+        <img src="${escapeAttr(url)}"
+          style="max-width:240px;max-height:200px;border-radius:8px;cursor:pointer;display:block;object-fit:cover;"
+          onclick="openLightbox('${escapeAttr(url)}')"
+          loading="lazy"
+          onerror="this.outerHTML='<div style=color:var(--text-muted);font-size:12px>[Imagem indisponível]</div>'"
+        >${body ? `<div style="font-size:13px;margin-top:6px;">${escapeHtml(body)}</div>` : ''}`;
+    }
+
+    // AUDIO / PTT
+    if (type === 'audio') {
+      if (!url) return `<span style="color:var(--text-muted);font-size:12px;">[Áudio não disponível]</span>`;
+      return `
+        <div style="display:flex;align-items:center;gap:10px;min-width:200px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--orange)">
+            <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+          <audio controls src="${escapeAttr(url)}" style="flex:1;height:32px;min-width:160px;" preload="none">
+            <source src="${escapeAttr(url)}">
+          </audio>
+        </div>`;
+    }
+
+    // VIDEO
+    if (type === 'video') {
+      if (!url) return `<span style="color:var(--text-muted);font-size:12px;">[Vídeo não disponível]</span>`;
+      return `
+        <video controls style="max-width:240px;max-height:200px;border-radius:8px;display:block;" preload="none">
+          <source src="${escapeAttr(url)}">
+          <a href="${escapeAttr(url)}" target="_blank" rel="noopener">Abrir vídeo</a>
+        </video>
+        ${body ? `<div style="font-size:13px;margin-top:6px;">${escapeHtml(body)}</div>` : ''}`;
+    }
+
+    // DOCUMENT / FILE
+    if (type === 'document') {
+      if (!url) return `<span style="color:var(--text-muted);font-size:12px;">[Arquivo não disponível]</span>`;
+      const fileName = decodeURIComponent(url.split('/').pop().split('?')[0]) || 'documento';
+      return `
+        <a href="${escapeAttr(url)}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:10px 12px;background:rgba(0,0,0,0.06);border-radius:8px;min-width:160px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span style="font-size:12px;color:var(--text);word-break:break-all;">${escapeHtml(fileName)}</span>
+        </a>`;
+    }
+
+    // STICKER
+    if (type === 'sticker' && url) {
+      return `<img src="${escapeAttr(url)}" style="max-width:120px;display:block;" loading="lazy">`;
+    }
+
+    // TEXT (default)
+    return escapeHtml(body);
+  }
+
   function renderMessages(messages) {
     const container = document.getElementById('chat-messages');
     let lastDate = null;
@@ -754,10 +836,12 @@
 
       const cls = msg.fromMe ? 'sent' : 'received';
       const time = formatFullTime(msg.timestamp);
+      const contentHtml = renderMediaContent(msg);
+
       html += `
         <div class="msg-group">
           <div class="msg-bubble ${cls}">
-            ${escapeHtml(msg.body)}
+            ${contentHtml}
             <span class="msg-time">${time}</span>
           </div>
         </div>`;
@@ -766,12 +850,18 @@
     container.innerHTML = html;
   }
 
-  function escapeHtml(str) {
-    return String(str || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\n/g, '<br>');
+  // ── Image lightbox ───────────────────────────────────────────────────────
+  function openLightbox(url) {
+    let lb = document.getElementById('img-lightbox');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'img-lightbox';
+      lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      lb.onclick = () => lb.remove();
+      document.body.appendChild(lb);
+    }
+    lb.innerHTML = `<img src="${escapeAttr(url)}" style="max-width:90vw;max-height:90vh;border-radius:6px;object-fit:contain;">`;
+    lb.style.display = 'flex';
   }
 
   // ===== SEND MESSAGE =====

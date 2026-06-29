@@ -11,6 +11,7 @@
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/chat", "destination": "/chat.html" },
     { "source": "/api/ai-log", "destination": "/api/ai-log.js" },
+    { "source": "/api/webhook/chatguru", "destination": "/api/webhook/chatguru.js" },
     { "source": "/api/webhook/pandape", "destination": "/api/webhook/pandape.js" },
     { "source": "/api/pandape/matches", "destination": "/api/pandape/matches.js" },
     { "source": "/api/:path*", "destination": "/api/:path*" },

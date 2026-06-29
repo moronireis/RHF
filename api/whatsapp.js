@@ -8,7 +8,7 @@
  */
 
 import { select, insert } from '../lib/supabase.js';
-import { sendMessage as chatguruSend, listChats as chatguruListChats, getChatDetails as chatguruGetDetails } from '../lib/chatguru.js';
+import { sendMessage as chatguruSend, listChats as chatguruListChats, getChatDetails as chatguruGetDetails, getChatMessages as chatguruGetMessages } from '../lib/chatguru.js';
 
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const SUGGEST_MODEL = 'claude-haiku-4-5-20251001';
@@ -113,30 +113,98 @@ async function handleChats(req, res) {
 
 // ─── Messages ────────────────────────────────────────────────────────────────
 
+function mapCGContentType(type) {
+  if (!type) return 'text';
+  const t = String(type).toLowerCase();
+  if (t === 'imagem' || t === 'image' || t === 'photo') return 'image';
+  if (t === 'audio' || t === 'ptt' || t === 'voice') return 'audio';
+  if (t === 'video') return 'video';
+  if (t === 'arquivo' || t === 'document' || t === 'file' || t === 'pdf') return 'document';
+  if (t === 'sticker') return 'sticker';
+  return 'text';
+}
+
+function normalizeCGTimestamp(ts) {
+  if (!ts) return Math.floor(Date.now() / 1000);
+  if (typeof ts === 'number') return ts < 1e12 ? ts : Math.floor(ts / 1000);
+  return Math.floor(new Date(ts).getTime() / 1000);
+}
+
+function normalizeCGMessage(m, phone) {
+  // Handle multiple ChatGuru field-name conventions
+  const rawType   = m.type ?? m.tipo ?? m.message_type ?? m.tipo_mensagem ?? 'text';
+  const contentType = mapCGContentType(rawType);
+  const fromMe    = m.from_me ?? m.fromMe ?? m.outbound ?? m.direction === 'outbound' ?? false;
+  const ts        = m.time ?? m.timestamp ?? m.data ?? m.created_at ?? null;
+  const body      = m.text ?? m.body ?? m.content ?? m.caption ?? m.texto_mensagem ?? '';
+  const mediaUrl  = m.file_url ?? m.url ?? m.media_url ?? m.url_arquivo ?? m.file ?? null;
+  const mime      = m.mime ?? m.mimetype ?? m.file_type ?? null;
+  const contactName = m.contact_name ?? m.nome ?? m.from_name ?? null;
+
+  return {
+    id: m.id ?? m.message_id ?? m.id_mensagem ?? null,
+    remoteJid: phone,
+    fromMe,
+    body,
+    timestamp: normalizeCGTimestamp(ts),
+    contentType,
+    mediaUrl,
+    mime,
+    contactName,
+  };
+}
+
 async function handleMessages(req, res) {
   const phone = req.query.phone;
-  const limit = req.query.limit || '100';
+  const limit = parseInt(req.query.limit || '80', 10);
   if (!phone) return res.status(400).json({ status: 'error', message: 'phone query param required' });
 
+  // ── 1. Try ChatGuru chat_read (real-time, includes media) ───────────────
+  try {
+    const cgData = await chatguruGetMessages(phone, limit);
+    const rawList = cgData?.messages ?? cgData?.data ?? cgData?.chat_messages ?? (Array.isArray(cgData) ? cgData : null);
+    if (rawList && rawList.length > 0) {
+      const normalized = rawList.map(m => normalizeCGMessage(m, phone));
+      // Sort ascending by timestamp
+      normalized.sort((a, b) => a.timestamp - b.timestamp);
+      return res.status(200).json({ status: 'ok', phone, count: normalized.length, data: normalized, source: 'chatguru' });
+    }
+  } catch (err) {
+    console.warn('[whatsapp/messages] ChatGuru fallback:', err.message);
+  }
+
+  // ── 2. Fallback: Supabase rhf_messages ────────────────────────────────────
   try {
     const messages = await select(
       'rhf_messages',
-      `phone=eq.${phone}&order=created_at.asc&limit=${limit}&select=id,phone,direction,content,message_type,chatguru_message_id,raw_webhook,created_at`
+      `phone=eq.${phone}&order=created_at.asc&limit=${limit}&select=id,phone,direction,content,content_type,message_type,media_url,chatguru_message_id,raw_webhook,created_at`
     );
     if (!Array.isArray(messages)) return res.status(200).json({ status: 'ok', phone, count: 0, data: [] });
 
     const normalized = messages.map(msg => {
-      const timestamp = Math.floor(new Date(msg.created_at).getTime() / 1000);
+      const ts = Math.floor(new Date(msg.created_at).getTime() / 1000);
       let contactName = null;
-      if (msg.raw_webhook && typeof msg.raw_webhook === 'object') contactName = msg.raw_webhook.contact_name;
+      if (msg.raw_webhook && typeof msg.raw_webhook === 'object') {
+        contactName = msg.raw_webhook.contact_name ?? msg.raw_webhook.nome ?? null;
+      }
+      // Reconstruct mediaUrl from legacy rows where media was stored in content
+      const mediaUrl = msg.media_url || (
+        (msg.content_type !== 'text' && msg.content && msg.content.startsWith('http')) ? msg.content : null
+      );
       return {
-        id: msg.chatguru_message_id || msg.id, remoteJid: phone,
-        fromMe: msg.direction === 'outbound', body: msg.content || '[mensagem]',
-        timestamp, type: msg.message_type || 'chat', status: null, contactName,
+        id: msg.chatguru_message_id || msg.id,
+        remoteJid: phone,
+        fromMe: msg.direction === 'outbound',
+        body: mediaUrl ? (msg.content && !msg.content.startsWith('http') ? msg.content : '') : (msg.content || ''),
+        timestamp: ts,
+        contentType: msg.content_type || mapCGContentType(msg.message_type) || 'text',
+        mediaUrl,
+        mime: null,
+        contactName,
       };
     });
 
-    return res.status(200).json({ status: 'ok', phone, count: normalized.length, data: normalized });
+    return res.status(200).json({ status: 'ok', phone, count: normalized.length, data: normalized, source: 'supabase' });
   } catch (error) {
     return res.status(500).json({ status: 'error', message: error.message });
   }
