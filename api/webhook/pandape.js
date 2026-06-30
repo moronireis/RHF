@@ -16,7 +16,7 @@
  */
 
 import { insert, upsert } from '../../lib/supabase.js';
-import { getMatch, getVacancy } from '../../lib/pandape.js';
+import { getMatch, getVacancy, resolveFolderName } from '../../lib/pandape.js';
 
 function verifySecret(req) {
   const secret = process.env.PANDAPE_WEBHOOK_SECRET;
@@ -56,10 +56,9 @@ function normalizeCandidate(match, vacancy, payload) {
   const education     = pick(match, 'Education', 'education', 'Escolaridade');
   const experience    = pick(match, 'ExperienceYears', 'experience_years', 'AnosExperiencia');
 
-  // Stage name from vacancy folder — Pandapé doesn't send the stage name in webhook,
-  // only the folder IDs. Use IdVacancyFolderTo for storage; stage name comes from vacancy data.
-  const stageName = pick(vacancy, 'CurrentFolder', 'currentFolder', 'FolderName', 'folder_name')
-    ?? `etapa_${payload.IdVacancyFolderTo ?? 'unknown'}`;
+  // Stage name: resolved by the caller via resolveFolderName() before normalizeCandidate is called.
+  // Injected as payload._stageName to avoid an extra async call inside this sync function.
+  const stageName = payload._stageName ?? `etapa_${payload.IdVacancyFolderTo ?? 'unknown'}`;
 
   return {
     name,
@@ -128,18 +127,22 @@ export default async function handler(req, res) {
       return res.status(200).json({ status: 'skipped', reason: 'missing_required_fields' });
     }
 
-    // Fetch full data from Pandapé API
-    console.log(`[Pandapé Webhook] Fetching match ${IdMatch} + vacancy ${IdVacancy}...`);
-    const [match, vacancy] = await Promise.all([
+    // Fetch full data from Pandapé API + resolve destination stage name
+    console.log(`[Pandapé Webhook] Fetching match ${IdMatch} + vacancy ${IdVacancy} + stage name...`);
+    const [match, vacancy, stageName] = await Promise.all([
       getMatch(IdMatch),
       getVacancy(IdVacancy),
+      IdVacancyFolderTo ? resolveFolderName(IdVacancy, IdVacancyFolderTo) : Promise.resolve(null),
     ]);
 
     const candidateName = match?.CandidateName ?? match?.name ?? 'unknown';
-    console.log(`[Pandapé Webhook] Fetched: ${candidateName}`);
+    console.log(`[Pandapé Webhook] Fetched: ${candidateName} → stage: ${stageName}`);
+
+    // Inject resolved stage name into payload so normalizeCandidate can use it
+    const enrichedPayload = { ...payload, _stageName: stageName };
 
     // Upsert candidate — conflict on match_id (unique per Pandapé match)
-    const candidateRow = normalizeCandidate(match, vacancy, payload);
+    const candidateRow = normalizeCandidate(match, vacancy, enrichedPayload);
     const upserted = await upsert('candidates', candidateRow, 'match_id');
     const candidateId = Array.isArray(upserted) && upserted[0] ? upserted[0].id : null;
 

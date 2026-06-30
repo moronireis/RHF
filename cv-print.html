@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Currículo RHF Talentos</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f0f0f0;
+      color: #111;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ── Print bar (hidden when printing) ─────────── */
+    #print-bar {
+      background: #FF6B35;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    #print-bar span { font-size: 14px; font-weight: 600; }
+    .print-btn {
+      background: #fff;
+      color: #FF6B35;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .print-btn:hover { background: #fff3ef; }
+
+    /* ── A4 page ───────────────────────────────────── */
+    #cv-page {
+      background: #fff;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 24px auto;
+      padding: 18mm 18mm 20mm;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+
+    /* ── Header ────────────────────────────────────── */
+    .cv-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #FF6B35;
+      margin-bottom: 20px;
+      gap: 16px;
+    }
+    .cv-header-logo img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+    }
+    .cv-header-contact {
+      text-align: right;
+      font-size: 11px;
+      color: #555;
+      line-height: 1.7;
+    }
+    .cv-header-contact strong {
+      display: block;
+      font-size: 13px;
+      color: #FF6B35;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    /* ── Candidate name ────────────────────────────── */
+    .cv-candidate-name {
+      font-size: 26px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .cv-candidate-sub {
+      font-size: 13px;
+      color: #FF6B35;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    /* ── Section ───────────────────────────────────── */
+    .cv-section {
+      margin-bottom: 18px;
+    }
+    .cv-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #FF6B35;
+      border-bottom: 1.5px solid #FF6B35;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
+    .cv-section-body {
+      font-size: 13px;
+      color: #222;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    .cv-section-body p {
+      margin-bottom: 4px;
+    }
+
+    /* ── Info grid (INFORMAÇÕES COMPLEMENTARES) ─────── */
+    .cv-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 24px;
+    }
+    .cv-info-item {
+      font-size: 12px;
+      color: #333;
+    }
+    .cv-info-item span {
+      color: #777;
+      font-size: 11px;
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    .cv-footer {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-size: 10px;
+      color: #aaa;
+      text-align: center;
+    }
+
+    /* ── Loading / error states ────────────────────── */
+    #state-loading, #state-error {
+      text-align: center;
+      padding: 48px 24px;
+      color: #555;
+    }
+    #state-error { color: #c00; }
+
+    /* ── Print styles ──────────────────────────────── */
+    @media print {
+      body { background: #fff; }
+      #print-bar { display: none !important; }
+      #cv-page {
+        margin: 0;
+        box-shadow: none;
+        padding: 0;
+        width: 100%;
+      }
+      @page { margin: 1cm; size: A4; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Print bar -->
+<div id="print-bar" class="no-print">
+  <span>Currículo RHF Talentos</span>
+  <button class="print-btn" onclick="window.print()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+      <rect x="6" y="14" width="12" height="8"/>
+    </svg>
+    Imprimir / Salvar PDF
+  </button>
+</div>
+
+<!-- CV Page -->
+<div id="cv-page">
+
+  <!-- Loading state -->
+  <div id="state-loading">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" style="animation:spin 1s linear infinite;display:block;margin:0 auto 12px;">
+      <circle cx="12" cy="12" r="10" stroke-dasharray="40 20"/>
+    </svg>
+    Carregando currículo...
+  </div>
+
+  <!-- Error state -->
+  <div id="state-error" style="display:none;"></div>
+
+  <!-- CV content (injected by JS) -->
+  <div id="cv-content" style="display:none;"></div>
+
+</div>
+
+<style>
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
+<script>
+  (async function () {
+    const params = new URLSearchParams(window.location.search);
+    const cvId = params.get('cv_id');
+
+    function showError(msg) {
+      document.getElementById('state-loading').style.display = 'none';
+      const el = document.getElementById('state-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    if (!cvId) {
+      showError('Parâmetro cv_id ausente na URL. Use /cv-print?cv_id=123');
+      return;
+    }
+
+    // Optional auth check — if token present, verify it; if absent, continue anyway
+    // (allows email recipients without login to view)
+    const token = localStorage.getItem('rhf_token');
+    if (token) {
+      try {
+        const authRes = await fetch(`/api/auth?action=verify`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const authData = await authRes.json();
+        if (!authData.valid) {
+          // Token invalid but don't block — the CV URL may have been shared externally
+          console.warn('[cv-print] token invalid, continuing as guest');
+        }
+      } catch (e) {
+        console.warn('[cv-print] auth check failed, continuing as guest', e.message);
+      }
+    }
+
+    // Fetch CV data
+    let cv;
+    try {
+      const res = await fetch(`/api/cv?action=query&id=${encodeURIComponent(cvId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (json.status !== 'ok' || !json.data) throw new Error(json.message || 'CV não encontrado');
+      cv = json.data;
+    } catch (e) {
+      showError('Erro ao carregar currículo: ' + e.message);
+      return;
+    }
+
+    const sections = cv.cv_content || {};
+    const name = cv.candidate_name || 'Candidato';
+
+    function escHtml(s) {
+      if (!s) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderText(text) {
+      if (!text) return '<em style="color:#999">Não informado</em>';
+      return escHtml(text)
+        .split('\n')
+        .filter(l => l.trim())
+        .map(l => `<p>${l}</p>`)
+        .join('');
+    }
+
+    // Build observacoes info grid from section text
+    function renderObsGrid(text) {
+      if (!text) return '<em style="color:#999">Não informado</em>';
+      const lines = text.split('\n').filter(l => l.trim());
+      // Separate structured lines (Key: Value) from WhatsApp block
+      const structured = [];
+      let waMsgs = [];
+      let inWA = false;
+      for (const line of lines) {
+        if (line.startsWith('Mensagens do candidato')) { inWA = true; continue; }
+        if (inWA) { waMsgs.push(line); continue; }
+        structured.push(line);
+      }
+
+      let html = '<div class="cv-info-grid">';
+      for (const line of structured) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx > 0) {
+          const key = line.slice(0, colonIdx).trim();
+          const val = line.slice(colonIdx + 1).trim();
+          html += `<div class="cv-info-item"><span>${escHtml(key)}</span><br>${escHtml(val)}</div>`;
+        } else {
+          html += `<div class="cv-info-item">${escHtml(line)}</div>`;
+        }
+      }
+      html += '</div>';
+
+      if (waMsgs.length > 0) {
+        html += `<div style="margin-top:10px;font-size:11px;color:#777;border-top:1px solid #eee;padding-top:8px;">
+          <strong style="color:#555">Mensagens do candidato (WhatsApp):</strong><br>
+          ${waMsgs.map(m => `<span style="display:block;margin-top:4px;">${escHtml(m)}</span>`).join('')}
+        </div>`;
+      }
+
+      return html;
+    }
+
+    const vacancyLine = [cv.vacancy_id ? `#${cv.vacancy_id}` : '', cv.vacancy_name || '']
+      .filter(Boolean).join(' — ');
+
+    const generatedDate = new Date(cv.created_at || Date.now()).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+    });
+
+    const html = `
+      <!-- Header -->
+      <div class="cv-header">
+        <div class="cv-header-logo">
+          <img src="/assets/logo-rhf.png" alt="RHF Talentos">
+        </div>
+        <div class="cv-header-contact">
+          <strong>RHF Talentos Vale dos Sinos/RS</strong>
+          e-mail: valedosinos@rhf.com.br &bull; <a href="http://www.rhf.com.br/valedosinos" style="color:#FF6B35;text-decoration:none;">www.rhf.com.br/valedosinos</a><br>
+          Fone: 51 99936-9855
+        </div>
+      </div>
+
+      <!-- Candidate name -->
+      <div class="cv-candidate-name">${escHtml(name)}</div>
+      ${vacancyLine ? `<div class="cv-candidate-sub">${escHtml(vacancyLine)}</div>` : ''}
+
+      <!-- INFORMAÇÕES DA VAGA -->
+      ${vacancyLine ? `
+      <div class="cv-section">
+        <div class="cv-section-title">Informações da Vaga</div>
+        <div class="cv-section-body"><p>${escHtml(vacancyLine)}</p></div>
+      </div>` : ''}
+
+      <!-- RESUMO -->
+      ${sections.resumo ? `
+      <div class="cv-section">
+        <div class="cv-section-title">Resumo</div>
+        <div class="cv-section-body">${renderText(sections.resumo)}</div>
+      </div>` : ''}
+
+      <!-- PRETENSÃO SALARIAL (extracted from observacoes if present) -->
+      ${extractSalary(sections.observacoes) ? `
+      <div class="cv-section">
+        <div class="cv-section-title">Pretensão Salarial</div>
+        <div class="cv-section-body"><p>${escHtml(extractSalary(sections.observacoes))}</p></div>
+      </div>` : ''}
+
+      <!-- EXPERIÊNCIA PROFISSIONAL -->
+      <div class="cv-section">
+        <div class="cv-section-title">Experiência Profissional</div>
+        <div class="cv-section-body">
+          ${sections.experiencia
+            ? renderText(sections.experiencia)
+            : '<p style="color:#999;font-style:italic;">Informações de experiência a serem complementadas via Pandapé.</p>'}
+        </div>
+      </div>
+
+      <!-- FORMAÇÃO -->
+      <div class="cv-section">
+        <div class="cv-section-title">Formação</div>
+        <div class="cv-section-body">
+          ${sections.formacao
+            ? renderText(sections.formacao)
+            : '<p style="color:#999;font-style:italic;">Não informado</p>'}
+        </div>
+      </div>
+
+      <!-- COMPETÊNCIAS -->
+      ${sections.competencias ? `
+      <div class="cv-section">
+        <div class="cv-section-title">Competências</div>
+        <div class="cv-section-body">${renderText(sections.competencias)}</div>
+      </div>` : ''}
+
+      <!-- INFORMAÇÕES COMPLEMENTARES -->
+      <div class="cv-section">
+        <div class="cv-section-title">Informações Complementares</div>
+        <div class="cv-section-body">
+          ${sections.observacoes
+            ? renderObsGrid(sections.observacoes)
+            : '<em style="color:#999">Não informado</em>'}
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="cv-footer">
+        Currículo gerado automaticamente pela Plataforma RHF Talentos IA &bull; ${generatedDate}
+      </div>
+    `;
+
+    document.getElementById('state-loading').style.display = 'none';
+    const content = document.getElementById('cv-content');
+    content.innerHTML = html;
+    content.style.display = 'block';
+
+    // Update page title
+    document.title = `Currículo — ${name} | RHF Talentos`;
+  })();
+
+  function extractSalary(obsText) {
+    if (!obsText) return null;
+    const match = obsText.match(/Pretens[aã]o salarial:\s*(.+)/i);
+    return match ? match[1].trim() : null;
+  }
+</script>
+
+</body>
+</html>

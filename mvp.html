@@ -567,6 +567,10 @@
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       Conversas
     </a>
+    <a class="nav-item admin-only" href="/configuracoes" style="display:none;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Configurações
+    </a>
   </nav>
 
   <div class="sidebar-footer">
@@ -955,7 +959,7 @@
           </div>
           <div id="cvResult">
             <div class="cv-preview">
-              <div class="cv-preview-badge">Gerado por IA</div>
+              <div class="cv-preview-badge">Gerado automaticamente</div>
               <div class="cv-preview-header">
                 <div class="cv-preview-avatar">MR</div>
                 <div>
@@ -2254,7 +2258,7 @@
 
     result.innerHTML = `
       <div class="cv-preview">
-        <div class="cv-preview-badge">Gerado por IA</div>
+        <div class="cv-preview-badge">Gerado automaticamente</div>
         <div class="cv-preview-header">
           <div class="cv-preview-avatar" style="background:${color};">${initials}</div>
           <div>
@@ -2265,12 +2269,10 @@
         </div>
 
         ${sections.resumo ? `<div class="cv-section"><div class="cv-section-title">Resumo Profissional</div><div class="cv-section-text">${nl2br(sections.resumo)}</div></div>` : ''}
-        ${sections.experiencia ? `<div class="cv-section"><div class="cv-section-title">Experiência Profissional</div><div class="cv-section-text">${nl2br(sections.experiencia)}</div></div>` : ''}
+        ${sections.experiencia ? `<div class="cv-section"><div class="cv-section-title">Experiência Profissional</div><div class="cv-section-text">${nl2br(sections.experiencia)}</div></div>` : '<div class="cv-section"><div class="cv-section-title">Experiência Profissional</div><div class="cv-section-text"><em style="color:var(--text-muted)">Informações de experiência a serem complementadas via Pandapé.</em></div></div>'}
         ${sections.competencias ? `<div class="cv-section"><div class="cv-section-title">Competências</div><div class="cv-section-text">${nl2br(sections.competencias)}</div></div>` : ''}
         ${sections.formacao ? `<div class="cv-section"><div class="cv-section-title">Formação Acadêmica</div><div class="cv-section-text">${nl2br(sections.formacao)}</div></div>` : ''}
-        ${sections.observacoes ? `<div class="cv-section"><div class="cv-section-title">Observações</div><div class="cv-section-text">${nl2br(sections.observacoes)}</div></div>` : ''}
-
-        ${cv.model_used ? `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">Gerado com ${cv.model_used} · ${cv.prompt_tokens || 0} tokens entrada · ${cv.completion_tokens || 0} tokens saída</div>` : ''}
+        ${sections.observacoes ? `<div class="cv-section"><div class="cv-section-title">Informações Complementares</div><div class="cv-section-text">${nl2br(sections.observacoes)}</div></div>` : ''}
       </div>
       <div class="cv-actions" style="flex-wrap:wrap;gap:8px;">
         <button class="cv-btn secondary" onclick="editCV()">
@@ -2324,36 +2326,9 @@
   }
 
   function savePDF() {
-    const preview = document.querySelector('.cv-preview');
-    if (!preview) { alert('Gere o currículo antes de salvar.'); return; }
-
-    const candidateName = (preview.querySelector('.cv-preview-name')?.textContent || 'curriculo')
-      .replace(/\s+/g, '-').toLowerCase();
-
-    if (typeof html2pdf === 'undefined') {
-      // html2pdf.js not yet loaded — load it on demand
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-      script.onload = () => doSavePDF(preview, candidateName);
-      document.head.appendChild(script);
-    } else {
-      doSavePDF(preview, candidateName);
-    }
-  }
-
-  function doSavePDF(preview, candidateName) {
-    const btn = document.querySelector('[onclick="savePDF()"]');
-    if (btn) btn.textContent = 'Gerando PDF...';
-    const opt = {
-      margin: [10, 15],
-      filename: `curriculo-${candidateName}.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    };
-    html2pdf().set(opt).from(preview).save().then(() => {
-      if (btn) btn.textContent = 'Salvar PDF';
-    });
+    const cvId = window._currentCVId;
+    if (!cvId) { alert('Gere o currículo primeiro.'); return; }
+    window.open(`/cv-print?cv_id=${cvId}`, '_blank');
   }
 
   function openEmailModal() {
@@ -2384,6 +2359,19 @@
       if (data.status === 'ok') {
         closeEmailModal();
         alert('Email enviado com sucesso!');
+      } else if (data.message && data.message.includes('RESEND_API_KEY')) {
+        // Show inline banner instead of alert so user sees the alternative action
+        let banner = document.getElementById('emailConfigBanner');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.id = 'emailConfigBanner';
+          banner.style.cssText = 'background:#FFF3CD;border:1px solid #FBBF24;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92400E;line-height:1.5;';
+          document.getElementById('emailModal').querySelector('div').insertBefore(
+            banner,
+            document.getElementById('emailTo').closest('div')
+          );
+        }
+        banner.innerHTML = `<strong>Email não configurado.</strong> Para envio de e-mail, configure <code style="background:#FEF3C7;padding:1px 4px;border-radius:3px;">RESEND_API_KEY</code> no painel do Vercel.<br>Alternativamente, use <strong>"Abrir para Impressão"</strong> para gerar o PDF.`;
       } else {
         alert('Erro: ' + (data.message || 'Falha no envio.'));
       }
@@ -2476,11 +2464,15 @@
       <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">CC (opcional)</label>
       <input id="emailCc" type="email" placeholder="copia@empresa.com" style="width:100%;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#FF6B35'" onblur="this.style.borderColor='#E5E7EB'">
     </div>
-    <div style="display:flex;gap:12px;">
-      <button onclick="closeEmailModal()" style="flex:1;padding:12px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>
-      <button id="emailSendBtn" onclick="sendCVEmail()" style="flex:2;padding:12px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="closeEmailModal()" style="flex:1;min-width:90px;padding:12px;background:#F3F4F6;color:#374151;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>
+      <button onclick="savePDF();closeEmailModal();" style="flex:1;min-width:130px;padding:12px;background:#F3F4F6;color:#FF6B35;border:1.5px solid #FF6B35;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Abrir para Impressão
+      </button>
+      <button id="emailSendBtn" onclick="sendCVEmail()" style="flex:2;min-width:120px;padding:12px;background:#FF6B35;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
-        Enviar
+        Enviar PDF
       </button>
     </div>
   </div>

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RHF Talentos | Configurações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAFA; --bg-white: #FFFFFF; --bg-light: #F3F4F6;
+    --bg-sidebar: #1E1E2D; --bg-sidebar-hover: #2A2A3C; --bg-sidebar-active: #32324A;
+    --border: #E5E7EB; --text: #1F2937; --text-sec: #6B7280; --text-muted: #9CA3AF;
+    --text-sidebar: #A0A3B1; --text-sidebar-active: #FFFFFF;
+    --orange: #FF6B35; --orange-hover: #E85A26; --orange-light: #FFF0EB;
+    --green: #10B981; --green-light: #ECFDF5; --green-dark: #059669;
+    --blue: #3B82F6; --blue-light: #EFF6FF;
+    --red: #EF4444; --red-light: #FEF2F2;
+    --amber: #F59E0B; --amber-light: #FFFBEB;
+    --purple: #7C3AED; --purple-light: #EDE9FE;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: 260px; background: var(--bg-sidebar); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-brand { padding: 24px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; }
+  .sidebar-brand .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+  .sidebar-brand .logo-text { font-size: 15px; font-weight: 700; color: #fff; }
+  .sidebar-brand .logo-sub { font-size: 11px; color: var(--text-sidebar); }
+  .sidebar-nav { padding: 16px 12px; flex: 1; }
+  .sidebar-section { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.25); letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 12px 8px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: var(--text-sidebar); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; text-decoration: none; }
+  .nav-item:hover { background: var(--bg-sidebar-hover); color: #fff; }
+  .nav-item.active { background: var(--bg-sidebar-active); color: var(--text-sidebar-active); }
+  .nav-item .nav-icon { width: 20px; height: 20px; opacity: 0.6; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; }
+  .sidebar-footer .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), #FF8F66); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+  .sidebar-footer .user-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .sidebar-footer .user-role { font-size: 11px; color: var(--text-sidebar); }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: auto; }
+  .page-header { padding: 28px 32px 0; }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .page-sub { font-size: 14px; color: var(--text-sec); margin-top: 4px; }
+
+  /* TABS */
+  .tabs-bar { display: flex; gap: 4px; padding: 20px 32px 0; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+  .tab-btn { padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: 600; background: none; border: none; cursor: pointer; color: var(--text-sec); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; border-radius: 0; display: flex; align-items: center; gap: 7px; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .tab-panel { display: none; padding: 28px 32px; }
+  .tab-panel.active { display: block; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 18px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; display: inline-flex; align-items: center; gap: 7px; }
+  .btn-primary { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: var(--orange-hover); }
+  .btn-outline { background: var(--bg-white); color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg-light); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #FECACA; }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+  /* TABLE */
+  .table-wrap { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--bg-light); }
+  thead th { padding: 12px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-light); }
+  tbody td { padding: 14px 20px; font-size: 14px; color: var(--text); vertical-align: middle; }
+  .role-badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .role-admin { background: var(--purple-light); color: var(--purple); }
+  .role-recrutador { background: var(--blue-light); color: var(--blue); }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .status-active { background: var(--green-light); color: var(--green-dark); }
+  .status-inactive { background: var(--bg-light); color: var(--text-muted); }
+  .action-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: var(--text-sec); transition: all 0.15s; }
+  .action-btn:hover { background: var(--bg-light); color: var(--text); }
+  .action-btn.delete:hover { background: var(--red-light); color: var(--red); }
+  .empty-state { padding: 48px; text-align: center; color: var(--text-muted); }
+
+  /* PERMISSIONS BOX */
+  .perms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+  .perm-card { background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .perm-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .perm-card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .perm-card-icon.admin { background: var(--purple-light); color: var(--purple); }
+  .perm-card-icon.recruiter { background: var(--blue-light); color: var(--blue); }
+  .perm-card-title { font-size: 13px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; }
+  .perm-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .perm-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-sec); line-height: 1.4; }
+  .perm-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; margin-top: 6px; }
+
+  /* INTEGRATION CARDS */
+  .integrations-grid { display: flex; flex-direction: column; gap: 16px; }
+  .int-card { background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .int-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .int-card-left { display: flex; align-items: center; gap: 14px; }
+  .int-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .int-card-icon.pandape { background: #EFF6FF; }
+  .int-card-icon.chatguru { background: #ECFDF5; }
+  .int-card-icon.email { background: #FFF7ED; }
+  .int-card-name { font-size: 16px; font-weight: 700; color: var(--text); }
+  .int-card-desc { font-size: 13px; color: var(--text-sec); margin-top: 2px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .badge-green { background: var(--green-light); color: var(--green-dark); }
+  .badge-amber { background: var(--amber-light); color: #92400E; }
+  .badge-gray { background: var(--bg-light); color: var(--text-muted); }
+  .int-card-body { display: flex; flex-direction: column; gap: 12px; }
+  .int-field { display: flex; flex-direction: column; gap: 4px; }
+  .int-field-label { font-size: 12px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.05em; }
+  .int-field-value { display: flex; align-items: center; gap: 8px; }
+  .int-code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); flex: 1; word-break: break-all; }
+  .copy-btn { padding: 7px 12px; background: var(--bg-white); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-sec); transition: all 0.15s; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .copy-btn:hover { background: var(--bg-light); color: var(--text); }
+  .copy-btn.copied { background: var(--green-light); color: var(--green-dark); border-color: #A7F3D0; }
+  .int-info-box { background: var(--bg-light); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: var(--text-sec); line-height: 1.5; }
+  .int-info-box strong { color: var(--text); }
+  .int-divider { height: 1px; background: var(--border); margin: 4px 0; }
+  .int-events-list { display: flex; flex-direction: column; gap: 8px; }
+  .int-event-row { display: flex; align-items: center; gap: 10px; }
+  .int-event-badge { background: var(--orange-light); color: var(--orange); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .int-event-text { font-size: 13px; color: var(--text-sec); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 540px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text-sec); margin-bottom: 24px; }
+  .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .form-field { margin-bottom: 16px; }
+  .form-field.full { grid-column: 1 / -1; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-label .opt { font-weight: 400; color: var(--text-muted); }
+  .form-input, .form-select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; outline: none; background: var(--bg-light); transition: border-color 0.15s; color: var(--text); }
+  .form-input:focus, .form-select:focus { border-color: var(--orange); background: #fff; }
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .error-banner { background: var(--red-light); border: 1px solid #FECACA; color: var(--red); font-size: 13px; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; display: none; }
+  .error-banner.show { display: block; }
+  .section-divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH GUARD — admin only -->
+<script>
+(function(){
+  document.documentElement.style.visibility='hidden';
+  var t=localStorage.getItem('rhf_token');
+  if(!t){document.documentElement.style.visibility='';window.location.replace('/login');return;}
+  fetch('/api/auth?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})})
+    .then(function(r){return r.ok?r.json():Promise.reject();})
+    .then(function(d){
+      document.documentElement.style.visibility='';
+      var stored=localStorage.getItem('rhf_user');
+      var profile=stored?JSON.parse(stored):{};
+      if(d&&d.profile)Object.assign(profile,d.profile);
+      if(d&&d.user)Object.assign(profile,{id:d.user.id,email:d.user.email});
+      window.RHF_USER=profile;
+      if(profile.role!=='admin'){window.location.replace('/mvp');return;}
+      var name=profile.full_name||profile.email||'Admin';
+      var el=document.getElementById('sidebar-user-name');if(el)el.textContent=name;
+      var av=document.getElementById('sidebar-avatar');if(av)av.textContent=(name[0]||'A').toUpperCase();
+    })
+    .catch(function(){localStorage.removeItem('rhf_token');document.documentElement.style.visibility='';window.location.replace('/login');});
+})();
+</script>
+
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon">R</div>
+    <div>
+      <div class="logo-text">RHF Talentos</div>
+      <div class="logo-sub">Plataforma IA</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">Principal</div>
+    <a class="nav-item" href="/mvp">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="/chat">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Conversas
+    </a>
+    <a class="nav-item" href="/admin">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Usuários
+    </a>
+    <a class="nav-item active" href="/configuracoes">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Configurações
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar" id="sidebar-avatar">A</div>
+    <div>
+      <div class="user-name" id="sidebar-user-name">Admin</div>
+      <div class="user-role">Administrador</div>
+    </div>
+    <button onclick="(function(){localStorage.removeItem('rhf_token');window.location.replace('/login');})()" title="Sair" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:rgba(255,255,255,0.35);transition:color 0.15s;" onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Configurações</div>
+    <div class="page-sub">Gerencie perfis de acesso e integrações da plataforma.</div>
+  </div>
+
+  <!-- TABS BAR -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('perfis')" id="tab-perfis">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Perfis de Acesso
+    </button>
+    <button class="tab-btn" onclick="switchTab('integracoes')" id="tab-integracoes">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      Integrações
+    </button>
+  </div>
+
+  <!-- TAB: PERFIS DE ACESSO -->
+  <div class="tab-panel active" id="panel-perfis">
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openCreateModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Criar Novo Usuário
+      </button>
+      <button class="btn btn-outline" onclick="loadUsers()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Atualizar
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Perfil</th>
+            <th>ID ChatGuru</th>
+            <th>ID Pandapé</th>
+            <th>Status</th>
+            <th style="text-align:right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="7" class="empty-state">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PERMISSION RULES INFO -->
+    <div style="margin-top:28px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;">Regras de Permissão</div>
+      <div class="perms-grid">
+        <div class="perm-card">
+          <div class="perm-card-header">
+            <div class="perm-card-icon admin">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <span class="perm-card-title">Administrador</span>
+          </div>
+          <ul class="perm-list">
+            <li>Acesso completo à plataforma</li>
+            <li>Visualiza todas as conversas, vagas e candidatos</li>
+            <li>Gerencia usuários e configurações</li>
+          </ul>
+        </div>
+        <div class="perm-card">
+          <div class="perm-card-header">
+            <div class="perm-card-icon recruiter">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <span class="perm-card-title">Recrutador</span>
+          </div>
+          <ul class="perm-list">
+            <li>Visualiza apenas suas próprias conversas (filtro por ID ChatGuru)</li>
+            <li>Acessa somente vagas sob sua responsabilidade (filtro por ID Pandapé)</li>
+            <li>Visualiza apenas candidatos vinculados aos seus processos</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: INTEGRAÇÕES -->
+  <div class="tab-panel" id="panel-integracoes">
+    <div class="integrations-grid">
+
+      <!-- Pandapé -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-card-left">
+            <div class="int-card-icon pandape">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div>
+              <div class="int-card-name">Pandapé API</div>
+              <div class="int-card-desc">ATS — Gerenciamento de vagas e candidatos</div>
+            </div>
+          </div>
+          <span class="badge badge-amber">
+            <span class="status-dot" style="background:#F59E0B"></span>
+            Aguardando Credenciais
+          </span>
+        </div>
+        <div class="int-card-body">
+          <div class="int-field">
+            <div class="int-field-label">Webhook URL</div>
+            <div class="int-field-value">
+              <div class="int-code" id="pandape-url">https://rhf-talentos-plataforma.vercel.app/api/webhook/pandape</div>
+              <button class="copy-btn" onclick="copyText('pandape-url', this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copiar
+              </button>
+            </div>
+          </div>
+          <div class="int-divider"></div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Eventos configurados</div>
+          <div class="int-events-list">
+            <div class="int-event-row">
+              <span class="int-event-badge">Estágio mudou</span>
+              <span class="int-event-text">Candidato mudou de estágio em uma vaga</span>
+            </div>
+            <div class="int-event-row">
+              <span class="int-event-badge">FINALISTAS</span>
+              <span class="int-event-text">Acionado quando candidato entra na etapa Finalistas</span>
+            </div>
+            <div class="int-event-row">
+              <span class="int-event-badge">CONTRATADOS</span>
+              <span class="int-event-text">Acionado quando candidato é marcado como Contratado</span>
+            </div>
+          </div>
+          <div class="int-divider"></div>
+          <div class="int-field">
+            <div class="int-field-label">Autenticação</div>
+            <div class="int-info-box">
+              Tipo: <strong>Bearer Token</strong> — Configure o token de autenticação nas variáveis de ambiente do Vercel (<code style="font-size:12px;background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:4px;">PANDAPE_WEBHOOK_SECRET</code>).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ChatGuru -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-card-left">
+            <div class="int-card-icon chatguru">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div>
+              <div class="int-card-name">ChatGuru</div>
+              <div class="int-card-desc">WhatsApp — Conversas com candidatos</div>
+            </div>
+          </div>
+          <span class="badge badge-green">
+            <span class="status-dot" style="background:#10B981"></span>
+            Conectado
+          </span>
+        </div>
+        <div class="int-card-body">
+          <div class="int-field">
+            <div class="int-field-label">Webhook URL</div>
+            <div class="int-field-value">
+              <div class="int-code" id="chatguru-url">https://rhf-talentos-plataforma.vercel.app/api/webhook/chatguru</div>
+              <button class="copy-btn" onclick="copyText('chatguru-url', this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copiar
+              </button>
+            </div>
+          </div>
+          <div class="int-divider"></div>
+          <div class="int-info-box">
+            Configure esta URL no painel do ChatGuru em <strong>Configurações &rarr; Webhooks</strong> para receber novas mensagens em tempo real na plataforma.
+          </div>
+        </div>
+      </div>
+
+      <!-- Email / Resend -->
+      <div class="int-card">
+        <div class="int-card-header">
+          <div class="int-card-left">
+            <div class="int-card-icon email">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="int-card-name">Email (Resend)</div>
+              <div class="int-card-desc">Envio de notificações e e-mails transacionais</div>
+            </div>
+          </div>
+          <span class="badge badge-amber">
+            <span class="status-dot" style="background:#F59E0B"></span>
+            Aguardando Configuração
+          </span>
+        </div>
+        <div class="int-card-body">
+          <div class="int-info-box">
+            Configure <strong>RESEND_API_KEY</strong> no painel do Vercel em <strong>Settings &rarr; Environment Variables</strong> para habilitar o envio de e-mails transacionais (notificações de candidatos, convites de acesso, alertas de processo).
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CREATE USER MODAL -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-title">Criar Novo Usuário</div>
+    <div class="modal-sub">O usuário receberá acesso à plataforma com a senha temporária definida abaixo.</div>
+    <div class="error-banner" id="create-error"></div>
+
+    <div class="section-label">Dados pessoais</div>
+    <div class="form-group">
+      <div class="form-field full">
+        <label class="form-label">Nome completo</label>
+        <input class="form-input" id="c-name" type="text" placeholder="Nome Sobrenome">
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="c-email" type="email" placeholder="nome@rhf.com.br">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Senha temporária</label>
+        <input class="form-input" id="c-password" type="text" placeholder="Mínimo 8 caracteres">
+        <div class="form-hint">O usuário poderá alterar após o primeiro acesso.</div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Perfil</label>
+        <select class="form-select" id="c-role">
+          <option value="recrutador">Recrutador</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Integrações <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:12px">(opcional)</span></div>
+    <div class="form-group">
+      <div class="form-field">
+        <label class="form-label">ID do Agente ChatGuru <span class="opt">(opcional)</span></label>
+        <input class="form-input" id="c-agent" type="text" placeholder="Ex: 12345">
+        <div class="form-hint">ID numérico do agente no ChatGuru para filtrar conversas atribuídas a este recrutador.</div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">ID do Gerente Pandapé <span class="opt">(opcional)</span></label>
+        <input class="form-input" id="c-manager" type="text" placeholder="Ex: user_abc">
+        <div class="form-hint">ID do recrutador no Pandapé para filtrar candidatos e vagas vinculados a este perfil.</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeCreateModal()">Cancelar</button>
+      <button class="btn btn-primary" style="flex:2" id="create-save-btn" onclick="createUser()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Criar Usuário
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Editar Usuário</div>
+    <div class="modal-sub" id="edit-modal-sub">Atualize as informações de acesso e integrações.</div>
+    <div class="error-banner" id="edit-error"></div>
+    <input type="hidden" id="e-user-id">
+
+    <div class="section-label">Dados pessoais</div>
+    <div class="form-group">
+      <div class="form-field full">
+        <label class="form-label">Nome completo</label>
+        <input class="form-input" id="e-name" type="text" placeholder="Nome Sobrenome">
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Perfil</label>
+        <select class="form-select" id="e-role">
+          <option value="recrutador">Recrutador</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Integrações <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:12px">(opcional)</span></div>
+    <div class="form-group">
+      <div class="form-field">
+        <label class="form-label">ID do Agente ChatGuru <span class="opt">(opcional)</span></label>
+        <input class="form-input" id="e-agent" type="text" placeholder="Ex: 12345">
+        <div class="form-hint">ID numérico do agente no ChatGuru para filtrar conversas deste recrutador.</div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">ID do Gerente Pandapé <span class="opt">(opcional)</span></label>
+        <input class="form-input" id="e-manager" type="text" placeholder="Ex: user_abc">
+        <div class="form-hint">ID do recrutador no Pandapé para filtrar candidatos e vagas deste perfil.</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn btn-primary" style="flex:2" id="edit-save-btn" onclick="updateUser()">
+        Salvar Alterações
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== TABS =====
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  // ===== ESCAPE HTML =====
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ===== LOAD USERS =====
+  async function loadUsers() {
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Carregando...</td></tr>';
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=list-users', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + t },
+      });
+      const data = await res.json();
+      const users = data.users || [];
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum usuário cadastrado ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const isActive = !u.disabled && u.email_confirmed_at !== null || !u.disabled;
+        return `
+        <tr>
+          <td style="font-weight:600">${esc(u.full_name || '—')}</td>
+          <td style="color:var(--text-sec);font-size:13px">${esc(u.email || '—')}</td>
+          <td><span class="role-badge ${u.role === 'admin' ? 'role-admin' : 'role-recrutador'}">${u.role === 'admin' ? 'Administrador' : 'Recrutador'}</span></td>
+          <td style="color:var(--text-muted);font-size:13px;font-family:monospace">${esc(u.chatguru_agent_id || '—')}</td>
+          <td style="color:var(--text-muted);font-size:13px;font-family:monospace">${esc(u.pandape_manager_id || '—')}</td>
+          <td>
+            <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+              <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;margin-right:4px"></span>
+              ${isActive ? 'Ativo' : 'Inativo'}
+            </span>
+          </td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="action-btn" title="Editar" onclick="openEditModal(${JSON.stringify(u).replace(/"/g,'&quot;')})" style="margin-right:4px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="action-btn delete" title="Desativar usuário" onclick="disableUser('${esc(u.id)}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color:var(--red)">Erro ao carregar: ${esc(err.message)}</td></tr>`;
+    }
+  }
+
+  async function disableUser(userId) {
+    if (!confirm('Desativar este usuário? O acesso à plataforma será revogado imediatamente.')) return;
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=disable-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const data = await res.json();
+      if (res.ok) { loadUsers(); } else { alert(data.error || 'Erro ao desativar usuário.'); }
+    } catch (err) { alert(err.message); }
+  }
+
+  // ===== CREATE MODAL =====
+  function openCreateModal() {
+    document.getElementById('createModal').classList.add('open');
+  }
+  function closeCreateModal() {
+    document.getElementById('createModal').classList.remove('open');
+    ['c-name','c-email','c-password','c-agent','c-manager'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('c-role').value = 'recrutador';
+    showError('create-error', '');
+  }
+
+  async function createUser() {
+    const name = document.getElementById('c-name').value.trim();
+    const email = document.getElementById('c-email').value.trim();
+    const password = document.getElementById('c-password').value.trim();
+    const role = document.getElementById('c-role').value;
+    const agentId = document.getElementById('c-agent').value.trim();
+    const managerId = document.getElementById('c-manager').value.trim();
+
+    if (!email) { showError('create-error', 'O e-mail é obrigatório.'); return; }
+    if (!password) { showError('create-error', 'A senha temporária é obrigatória.'); return; }
+    if (password.length < 8) { showError('create-error', 'A senha deve ter pelo menos 8 caracteres.'); return; }
+
+    const btn = document.getElementById('create-save-btn');
+    btn.disabled = true; btn.textContent = 'Criando...';
+    showError('create-error', '');
+
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=create-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+        body: JSON.stringify({
+          email, password, role,
+          full_name: name || null,
+          chatguru_agent_id: agentId || null,
+          pandape_manager_id: managerId || null
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        closeCreateModal();
+        loadUsers();
+      } else {
+        showError('create-error', data.error || 'Erro ao criar usuário.');
+      }
+    } catch (err) {
+      showError('create-error', err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Criar Usuário';
+    }
+  }
+
+  // ===== EDIT MODAL =====
+  function openEditModal(user) {
+    document.getElementById('e-user-id').value = user.id || '';
+    document.getElementById('e-name').value = user.full_name || '';
+    document.getElementById('e-role').value = user.role || 'recrutador';
+    document.getElementById('e-agent').value = user.chatguru_agent_id || '';
+    document.getElementById('e-manager').value = user.pandape_manager_id || '';
+    document.getElementById('edit-modal-sub').textContent = 'Editando: ' + (user.email || user.full_name || 'usuário');
+    showError('edit-error', '');
+    document.getElementById('editModal').classList.add('open');
+  }
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+    showError('edit-error', '');
+  }
+
+  async function updateUser() {
+    const userId = document.getElementById('e-user-id').value;
+    const name = document.getElementById('e-name').value.trim();
+    const role = document.getElementById('e-role').value;
+    const agentId = document.getElementById('e-agent').value.trim();
+    const managerId = document.getElementById('e-manager').value.trim();
+
+    const btn = document.getElementById('edit-save-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    showError('edit-error', '');
+
+    try {
+      const t = localStorage.getItem('rhf_token');
+      const res = await fetch('/api/auth?action=update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+        body: JSON.stringify({
+          user_id: userId,
+          role,
+          full_name: name || null,
+          chatguru_agent_id: agentId || null,
+          pandape_manager_id: managerId || null
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        closeEditModal();
+        loadUsers();
+      } else {
+        showError('edit-error', data.error || 'Erro ao atualizar usuário.');
+      }
+    } catch (err) {
+      showError('edit-error', err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar Alterações';
+    }
+  }
+
+  // ===== HELPERS =====
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.toggle('show', !!msg);
+  }
+
+  function copyText(elementId, btn) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar';
+      }, 2000);
+    }).catch(() => {
+      // Fallback
+      const range = document.createRange();
+      range.selectNode(el);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+    });
+  }
+
+  // Close modals on overlay click
+  document.getElementById('createModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCreateModal();
+  });
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+
+  // ===== INIT =====
+  loadUsers();
+</script>
+</body>
+</html>

@@ -12,10 +12,6 @@ import { select, insert } from '../lib/supabase.js';
 import { getVacancy } from '../lib/pandape.js';
 import { sendFile as chatguruSendFile } from '../lib/chatguru.js';
 
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-4-20250514';
-const MAX_TOKENS = 2000;
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -58,94 +54,147 @@ async function handleQuery(req, res) {
 
 // ─── Generate ─────────────────────────────────────────────────────────────────
 
-async function callClaude(systemPrompt, userPrompt) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY env var is required');
+/**
+ * Build CV sections directly from structured Pandapé data + WhatsApp messages.
+ * No LLM involved — deterministic, instant, zero cost.
+ */
+function buildCvFromData(candidate, messages, vacancy) {
+  const raw = (candidate.raw_data && typeof candidate.raw_data === 'object') ? candidate.raw_data : {};
 
-  const r = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] }),
-  });
-  if (!r.ok) { const body = await r.text(); throw new Error(`Claude API error (${r.status}): ${body}`); }
-  const data = await r.json();
-  return { text: data?.content?.[0]?.text ?? '', promptTokens: data?.usage?.input_tokens ?? 0, completionTokens: data?.usage?.output_tokens ?? 0 };
-}
-
-const SYSTEM_PROMPT = `Você é um especialista em recrutamento e seleção brasileiro, com 15 anos de experiência no mercado de RH. Sua tarefa é gerar currículos profissionais em Português (PT-BR) a partir de dados brutos de candidatos e histórico de conversas WhatsApp.
-
-Diretrizes:
-- Escreva em Português brasileiro formal, mas natural
-- Quando os dados forem incompletos, redija o que for possível
-- Extraia informações relevantes do histórico de conversa WhatsApp
-- Se houver contexto de vaga, adapte o Resumo Profissional para a posição
-- Seja conciso e objetivo — recrutadores leem currículos em 6 segundos
-- Use bullet points nas seções de experiência e competências
-- Nunca invente informações — se não há dado, indique "Não informado"
-
-Formato de saída OBRIGATÓRIO (use estas tags XML):
-<resumo>[2-4 frases sobre o perfil profissional]</resumo>
-<experiencia>[Experiências como bullet points]</experiencia>
-<competencias>[Lista de competências]</competencias>
-<formacao>[Formação acadêmica]</formacao>
-<observacoes>[Disponibilidade, pretensão salarial, localização]</observacoes>`;
-
-function buildUserPrompt(candidate, messages, vacancy) {
-  const lines = [];
-  lines.push('=== DADOS DO CANDIDATO ===');
-  lines.push(`Nome: ${candidate.name ?? 'Não informado'}`);
-  lines.push(`Email: ${candidate.email ?? 'Não informado'}`);
-  lines.push(`Telefone: ${candidate.phone ?? 'Não informado'}`);
-  lines.push(`Vaga de origem: ${candidate.vacancy_name ?? 'Não informada'}`);
-  lines.push(`Estágio atual: ${candidate.stage ?? 'Não informado'}`);
-
-  if (candidate.raw_data && typeof candidate.raw_data === 'object') {
-    const raw = candidate.raw_data;
-    const skills = raw.Skills ?? raw.skills ?? raw.Competencias ?? null;
-    const experience = raw.Experience ?? raw.experience ?? raw.Experiencia ?? null;
-    const education = raw.Education ?? raw.education ?? raw.Formacao ?? null;
-    const summary = raw.Summary ?? raw.summary ?? raw.Resumo ?? null;
-    const linkedin = raw.LinkedIn ?? raw.linkedin ?? raw.LinkedInUrl ?? null;
-    if (skills) lines.push(`\nCompetências (Pandapé): ${JSON.stringify(skills)}`);
-    if (experience) lines.push(`\nExperiência (Pandapé): ${JSON.stringify(experience)}`);
-    if (education) lines.push(`\nFormação (Pandapé): ${JSON.stringify(education)}`);
-    if (summary) lines.push(`\nResumo (Pandapé): ${summary}`);
-    if (linkedin) lines.push(`\nLinkedIn: ${linkedin}`);
-    lines.push(`\nDados completos do Pandapé (JSON):\n${JSON.stringify(raw, null, 2)}`);
+  // ── helper to pick among multiple field name conventions ──
+  function pick(...keys) {
+    for (const k of keys) { if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') return raw[k]; }
+    return null;
   }
 
+  // ── RESUMO ────────────────────────────────────────────────
+  const summaryRaw = pick('Summary', 'summary', 'Resumo', 'Bio', 'bio', 'ProfessionalSummary');
+  const vagaCtx = vacancy?.Title ?? vacancy?.title ?? candidate.vacancy_name ?? null;
+  let resumo = '';
+  if (summaryRaw) {
+    resumo = String(summaryRaw).trim();
+  } else {
+    // Build a minimal summary from name + experience years + city
+    const expYears = candidate.experience_years ?? pick('ExperienceYears', 'experience_years', 'AnosExperiencia');
+    const city = candidate.city ?? pick('City', 'city', 'Cidade');
+    const parts = [];
+    if (candidate.name) parts.push(`${candidate.name} é um profissional`);
+    if (expYears) parts.push(`com ${expYears} ${Number(expYears) === 1 ? 'ano' : 'anos'} de experiência`);
+    if (city) parts.push(`localizado em ${city}`);
+    if (vagaCtx) parts.push(`candidato à vaga de ${vagaCtx}`);
+    resumo = parts.length > 0 ? parts.join(' ') + '.' : 'Perfil profissional não detalhado no cadastro.';
+  }
+
+  // ── EXPERIÊNCIA ──────────────────────────────────────────
+  const experienceRaw = pick('Experience', 'experience', 'Experiences', 'Experiencia', 'WorkHistory', 'Jobs');
+  const lines = [];
+  if (Array.isArray(experienceRaw) && experienceRaw.length > 0) {
+    for (const exp of experienceRaw) {
+      const title = exp.JobTitle ?? exp.Title ?? exp.Cargo ?? exp.Role ?? exp.title ?? '';
+      const company = exp.Company ?? exp.Empresa ?? exp.company ?? '';
+      const start = exp.StartDate ?? exp.DataInicio ?? exp.start ?? '';
+      const end = exp.EndDate ?? exp.DataFim ?? exp.end ?? 'Atual';
+      const desc = exp.Description ?? exp.Descricao ?? exp.description ?? '';
+      const period = [start, end].filter(Boolean).join(' – ');
+      const header = [title, company, period].filter(Boolean).join(' | ');
+      if (header) lines.push(`• ${header}`);
+      if (desc) lines.push(`  ${String(desc).replace(/\n/g, ' ').trim()}`);
+    }
+  } else if (typeof experienceRaw === 'string' && experienceRaw.trim()) {
+    lines.push(experienceRaw.trim());
+  }
+  const experiencia = lines.length > 0 ? lines.join('\n') : null;
+
+  // ── COMPETÊNCIAS ─────────────────────────────────────────
+  const skillsRaw = pick('Skills', 'skills', 'Competencias', 'Habilidades', 'Abilities', 'Competencies');
+  const skillLines = [];
+  if (Array.isArray(skillsRaw) && skillsRaw.length > 0) {
+    for (const s of skillsRaw) {
+      const name = (typeof s === 'string') ? s : (s.Name ?? s.name ?? s.Skill ?? s.skill ?? JSON.stringify(s));
+      if (name) skillLines.push(`• ${name}`);
+    }
+  } else if (typeof skillsRaw === 'string' && skillsRaw.trim()) {
+    skillLines.push(skillsRaw.trim());
+  }
+
+  // If no skills from Pandapé, try to extract from WhatsApp messages
+  if (skillLines.length === 0 && messages && messages.length > 0) {
+    const skillKeywords = ['experiência em', 'experiencia em', 'conhecimento em', 'habilidade em', 'trabalho com', 'trabalho na', 'trabalho no', 'sei trabalhar', 'domínio de', 'dominio de', 'curso de', 'formação em', 'formacao em'];
+    const extracted = new Set();
+    for (const m of messages) {
+      const text = ((m.content ?? m.text ?? '')).toLowerCase();
+      for (const kw of skillKeywords) {
+        const idx = text.indexOf(kw);
+        if (idx !== -1) {
+          const snippet = text.slice(idx + kw.length, idx + kw.length + 60).replace(/[.!?,;].*/, '').trim();
+          if (snippet.length > 2) extracted.add(snippet.charAt(0).toUpperCase() + snippet.slice(1));
+        }
+      }
+    }
+    for (const s of extracted) skillLines.push(`• ${s}`);
+  }
+
+  const competencias = skillLines.length > 0 ? skillLines.join('\n') : null;
+
+  // ── FORMAÇÃO ─────────────────────────────────────────────
+  const educationRaw = pick('Education', 'education', 'Formacao', 'Escolaridade', 'Educations');
+  const eduLines = [];
+  if (Array.isArray(educationRaw) && educationRaw.length > 0) {
+    for (const ed of educationRaw) {
+      const degree = ed.Degree ?? ed.degree ?? ed.Curso ?? ed.course ?? '';
+      const inst = ed.Institution ?? ed.institution ?? ed.Instituicao ?? ed.School ?? ed.school ?? '';
+      const year = ed.Year ?? ed.year ?? ed.ConclusionYear ?? ed.EndYear ?? '';
+      const parts = [degree, inst, year].filter(Boolean);
+      if (parts.length > 0) eduLines.push(`• ${parts.join(' | ')}`);
+    }
+  } else if (typeof educationRaw === 'string' && educationRaw.trim()) {
+    // Single string like "Ensino Superior Completo"
+    const edu = candidate.education ?? educationRaw;
+    eduLines.push(String(edu).trim());
+  } else if (candidate.education) {
+    eduLines.push(String(candidate.education).trim());
+  }
+  const formacao = eduLines.length > 0 ? eduLines.join('\n') : null;
+
+  // ── OBSERVAÇÕES ──────────────────────────────────────────
+  const obsLines = [];
+  const city2 = candidate.city ?? pick('City', 'city', 'Cidade');
+  const salary = candidate.salary_expectation ?? pick('SalaryExpectation', 'salary_expectation', 'PretensaoSalarial');
+  const linkedin = candidate.linkedin_url ?? pick('LinkedinUrl', 'linkedin_url', 'Linkedin');
+  const availability = pick('Availability', 'availability', 'Disponibilidade');
+  if (city2) obsLines.push(`Localização: ${city2}`);
+  if (salary) obsLines.push(`Pretensão salarial: R$ ${Number(salary).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+  if (availability) obsLines.push(`Disponibilidade: ${availability}`);
+  if (candidate.stage) obsLines.push(`Etapa no processo: ${candidate.stage}`);
+  if (linkedin) obsLines.push(`LinkedIn: ${linkedin}`);
+  if (candidate.email) obsLines.push(`E-mail: ${candidate.email}`);
+  if (candidate.phone) obsLines.push(`Telefone: ${String(candidate.phone).replace(/(\d{2})(\d{2})(\d{4,5})(\d{4})/, '+$1 ($2) $3-$4')}`);
+
+  // Supplement with relevant WhatsApp messages (text only, inbound from candidate)
   if (messages && messages.length > 0) {
-    lines.push('\n=== HISTÓRICO DE CONVERSA WHATSAPP ===');
-    for (const msg of messages) {
-      const dir = msg.direction === 'inbound' ? 'Candidato' : 'RHF';
-      const date = msg.created_at ? new Date(msg.created_at).toLocaleDateString('pt-BR') : '';
-      const content = msg.content ?? msg.text ?? '';
-      if (content) lines.push(`[${date}] ${dir}: ${content}`);
+    const waMsgs = messages
+      .filter(m => (m.direction === 'inbound' || m.from_me === false) && (m.content ?? m.text ?? '').trim().length > 10)
+      .slice(0, 10)
+      .map(m => (m.content ?? m.text ?? '').trim());
+    if (waMsgs.length > 0) {
+      obsLines.push('\nMensagens do candidato (WhatsApp):');
+      waMsgs.forEach(t => obsLines.push(`"${t}"`));
     }
   }
 
-  if (vacancy) {
-    lines.push('\n=== CONTEXTO DA VAGA ===');
-    lines.push(`Título: ${vacancy.Title ?? vacancy.title ?? vacancy.Name ?? vacancy.name ?? 'Não informado'}`);
-    if (vacancy.Description ?? vacancy.description) lines.push(`Descrição: ${vacancy.Description ?? vacancy.description}`);
-    if (vacancy.Requirements ?? vacancy.requirements) lines.push(`Requisitos: ${JSON.stringify(vacancy.Requirements ?? vacancy.requirements)}`);
-  }
+  const observacoes = obsLines.length > 0 ? obsLines.join('\n') : null;
 
-  lines.push('\nGere o currículo completo seguindo o formato XML especificado.');
-  return lines.join('\n');
+  // ── FULL TEXT ─────────────────────────────────────────────
+  const ftParts = [];
+  ftParts.push('RESUMO PROFISSIONAL', resumo);
+  if (experiencia) ftParts.push('\nEXPERIÊNCIA PROFISSIONAL', experiencia);
+  if (competencias) ftParts.push('\nCOMPETÊNCIAS', competencias);
+  if (formacao) ftParts.push('\nFORMAÇÃO ACADÊMICA', formacao);
+  if (observacoes) ftParts.push('\nOBSERVAÇÕES', observacoes);
+
+  return { resumo, experiencia, competencias, formacao, observacoes, full_text: ftParts.join('\n') };
 }
 
-function parseCvSections(text) {
-  const extract = (tag) => { const m = text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i')); return m ? m[1].trim() : ''; };
-  const resumo = extract('resumo'), experiencia = extract('experiencia'), competencias = extract('competencias'), formacao = extract('formacao'), observacoes = extract('observacoes');
-  const parts = [];
-  if (resumo) { parts.push('RESUMO PROFISSIONAL', resumo); }
-  if (experiencia) { parts.push('\nEXPERIÊNCIA PROFISSIONAL', experiencia); }
-  if (competencias) { parts.push('\nCOMPETÊNCIAS', competencias); }
-  if (formacao) { parts.push('\nFORMAÇÃO ACADÊMICA', formacao); }
-  if (observacoes) { parts.push('\nOBSERVAÇÕES', observacoes); }
-  return { resumo, experiencia, competencias, formacao, observacoes, full_text: parts.join('\n') };
-}
 
 async function handleGenerate(req, res) {
   try {
@@ -168,9 +217,7 @@ async function handleGenerate(req, res) {
     const vid = vacancy_id ?? candidate.vacancy_id ?? null;
     if (vid) { try { vacancy = await getVacancy(vid); } catch (err) { console.warn('[CV] vacancy skip:', err.message); } }
 
-    const userPrompt = buildUserPrompt(candidate, messages, vacancy);
-    const { text: rawResponse, promptTokens, completionTokens } = await callClaude(SYSTEM_PROMPT, userPrompt);
-    const sections = parseCvSections(rawResponse);
+    const sections = buildCvFromData(candidate, messages, vacancy);
 
     const vacancyName = vacancy?.Title ?? vacancy?.title ?? vacancy?.Name ?? vacancy?.name ?? candidate.vacancy_name ?? null;
 
@@ -178,7 +225,7 @@ async function handleGenerate(req, res) {
       candidate_id, vacancy_id: vid, vacancy_name: vacancyName,
       candidate_name: candidate.name ?? 'Não informado',
       cv_content: { resumo: sections.resumo, experiencia: sections.experiencia, competencias: sections.competencias, formacao: sections.formacao, observacoes: sections.observacoes },
-      full_text: sections.full_text, model_used: MODEL, prompt_tokens: promptTokens, completion_tokens: completionTokens,
+      full_text: sections.full_text,
     };
 
     let savedCv = null;
@@ -189,8 +236,7 @@ async function handleGenerate(req, res) {
       cv: {
         id: savedCv?.id ?? null, candidate_id, candidate_name: cvRow.candidate_name, vacancy_name: vacancyName,
         candidate_phone: candidate.phone ?? null,
-        sections: cvRow.cv_content, full_text: sections.full_text, model_used: MODEL,
-        prompt_tokens: promptTokens, completion_tokens: completionTokens,
+        sections: cvRow.cv_content, full_text: sections.full_text,
         generated_at: savedCv?.created_at ?? new Date().toISOString(),
       },
     });
